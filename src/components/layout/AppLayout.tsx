@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
-import { Camera, Shuffle, Shirt, Lightbulb, Wand2, Settings as SettingsIcon, House } from "lucide-react";
+import { Camera, Shuffle, Shirt, Lightbulb, Wand2, Settings as SettingsIcon, House, Sparkles } from "lucide-react";
 
 const tabs = [
   { to: "/", label: "Home", icon: House },
@@ -7,6 +7,7 @@ const tabs = [
   { to: "/mix", label: "Mix", icon: Shuffle },
   { to: "/closet", label: "Closet", icon: Shirt },
   { to: "/suggestions", label: "Suggestions", icon: Lightbulb },
+  { to: "/assistant", label: "AI Assistant", icon: Sparkles },
   { to: "/tryon", label: "Try‑On", icon: Wand2 },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ];

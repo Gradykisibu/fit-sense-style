@@ -12,6 +12,7 @@ import Closet from "./pages/Closet";
 import Suggestions from "./pages/Suggestions";
 import TryOn from "./pages/TryOn";
 import Settings from "./pages/Settings";
+import Assistant from "./pages/Assistant";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/mix" element={<Mix />} />
             <Route path="/closet" element={<Closet />} />
             <Route path="/suggestions" element={<Suggestions />} />
+            <Route path="/assistant" element={<Assistant />} />
             <Route path="/tryon" element={<TryOn />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
