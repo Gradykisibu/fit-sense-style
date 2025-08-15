@@ -1,5 +1,16 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
-import { Camera, Shuffle, Shirt, Lightbulb, Wand2, Settings as SettingsIcon, House, Sparkles } from "lucide-react";
+import { Camera, Shuffle, Shirt, Lightbulb, Wand2, Settings as SettingsIcon, House, Sparkles, User, LogOut } from "lucide-react";
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 
 const tabs = [
   { to: "/", label: "Home", icon: House },
@@ -13,6 +24,8 @@ const tabs = [
 ];
 
 export default function AppLayout() {
+  const { user, logout } = useAuth();
+  
   return (
     <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur border-b">
@@ -32,6 +45,37 @@ export default function AppLayout() {
                 </NavLink>
               ))}
             </nav>
+            
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback>
+                        {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {user?.name || 'User'}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user?.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={logout} className="cursor-pointer text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
       </header>
