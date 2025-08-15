@@ -34,13 +34,13 @@ export default function Check() {
   };
 
   return (
-    <main className="container mx-auto px-6 py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Outfit Check</h1>
+    <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h1 className="text-xl sm:text-2xl font-bold">Outfit Check</h1>
         <Stepper steps={["Upload", "Analyzing", "Results"]} current={stepIndex} />
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-3">
           <UploadCard
             label="Drop a full‑body photo or tap to upload/capture"
@@ -49,10 +49,12 @@ export default function Check() {
             onClear={() => { setFile(null); setPreview(undefined); setResult(null); }}
             previewUrl={preview}
           />
-          <div className="flex gap-2">
-            <Button onClick={onAnalyze} disabled={!file || loading}>{loading ? 'Analyzing…' : 'Analyze Outfit'}</Button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button onClick={onAnalyze} disabled={!file || loading} className="w-full sm:w-auto">
+              {loading ? 'Analyzing…' : 'Analyze Outfit'}
+            </Button>
             {result && (
-              <Button variant="secondary" onClick={() => { saveSnapshot({ type: 'outfit', preview, result }); toast({ title: 'Saved snapshot' }); }}>
+              <Button variant="secondary" onClick={() => { saveSnapshot({ type: 'outfit', preview, result }); toast({ title: 'Saved snapshot' }); }} className="w-full sm:w-auto">
                 Save Snapshot
               </Button>
             )}
