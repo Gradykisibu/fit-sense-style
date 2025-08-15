@@ -38,9 +38,9 @@ export default function Closet() {
   };
 
   return (
-    <main className="container mx-auto px-6 py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">My Closet</h1>
+    <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h1 className="text-xl sm:text-2xl font-bold">My Closet</h1>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button>Add Item</Button>
@@ -88,7 +88,7 @@ export default function Closet() {
           <CardContent className="text-muted-foreground">Add items to start getting personalized suggestions.</CardContent>
         </Card>
       ) : (
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {items.map((it) => (<ClosetItemCard key={it.id} item={it} onDelete={onDelete} />))}
         </div>
       )}

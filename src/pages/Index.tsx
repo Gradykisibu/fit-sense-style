@@ -13,11 +13,11 @@ const Index = () => {
     <main className="min-h-screen bg-background">
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[hsl(var(--background))] via-[hsl(var(--accent))]/20 to-[hsl(var(--background))]" aria-hidden />
-        <div className="container mx-auto px-6 py-20 relative">
-          <div className="mx-auto max-w-3xl text-center">
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4">FitSense</h1>
-            <p className="text-lg md:text-xl text-muted-foreground mb-8">AI outfit rater and stylist. Upload your look or mix items to get smart, actionable style advice.</p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div className="container mx-auto px-4 sm:px-6 py-12 sm:py-20 relative">
+          <div className="mx-auto max-w-4xl text-center">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight mb-6">FitSense</h1>
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">AI outfit rater and stylist. Upload your look or mix items to get smart, actionable style advice.</p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
               <Button asChild>
                 <Link to="/check" aria-label="Start Outfit Check">
                   <Camera className="mr-2 h-5 w-5" /> Outfit Check
@@ -29,20 +29,22 @@ const Index = () => {
                 </Link>
               </Button>
             </div>
-            <div className="mt-6 text-sm text-muted-foreground flex items-center justify-center gap-3">
-              <Link to="/closet" className="underline underline-offset-4">My Closet</Link>
-              <span>·</span>
-              <Link to="/suggestions" className="underline underline-offset-4">Suggestions</Link>
-              <span>·</span>
-              <Link to="/tryon" className="underline underline-offset-4">Try‑On</Link>
-              <span>·</span>
-              <Link to="/settings" className="underline underline-offset-4">Settings</Link>
+            <div className="mt-8 text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                <Link to="/closet" className="underline underline-offset-4 hover:text-foreground transition-colors">My Closet</Link>
+                <span className="hidden sm:inline">·</span>
+                <Link to="/suggestions" className="underline underline-offset-4 hover:text-foreground transition-colors">Suggestions</Link>
+                <span className="hidden sm:inline">·</span>
+                <Link to="/tryon" className="underline underline-offset-4 hover:text-foreground transition-colors">Try‑On</Link>
+                <span className="hidden sm:inline">·</span>
+                <Link to="/settings" className="underline underline-offset-4 hover:text-foreground transition-colors">Settings</Link>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="container mx-auto px-6 pb-20 grid md:grid-cols-3 gap-6">
+      <section className="container mx-auto px-4 sm:px-6 pb-12 sm:pb-20 grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -69,8 +71,8 @@ const Index = () => {
         </Card>
       </section>
 
-      <section className="container mx-auto px-6 pb-24">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-muted-foreground">
+      <section className="container mx-auto px-4 sm:px-6 pb-12 sm:pb-24">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2"><Camera className="h-4 w-4" /> Upload or capture</div>
           <div className="flex items-center gap-2"><Box className="h-4 w-4" /> Detect items & colors</div>
           <div className="flex items-center gap-2"><Sparkles className="h-4 w-4" /> AI verdict + swaps</div>

@@ -36,11 +36,11 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-secondary/20 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Welcome back</CardTitle>
-          <CardDescription>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-secondary/20 p-4">
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader className="text-center space-y-2">
+          <CardTitle className="text-2xl sm:text-3xl">Welcome back</CardTitle>
+          <CardDescription className="text-sm sm:text-base">
             Sign in to your FitSense account
           </CardDescription>
         </CardHeader>

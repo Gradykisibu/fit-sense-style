@@ -1,6 +1,7 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
-import { Camera, Shuffle, Shirt, Lightbulb, Wand2, Settings as SettingsIcon, House, Sparkles, User, LogOut } from "lucide-react";
+import { Camera, Shuffle, Shirt, Lightbulb, Wand2, Settings as SettingsIcon, House, Sparkles, User, LogOut, Menu, X } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
+import { useState } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const tabs = [
   { to: "/", label: "Home", icon: House },
@@ -25,14 +27,17 @@ const tabs = [
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   return (
     <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur border-b">
         <div className="container mx-auto px-4">
           <div className="flex h-14 items-center justify-between">
-            <Link to="/" className="font-bold tracking-tight">FitSense</Link>
-            <nav className="hidden md:flex items-center gap-1" aria-label="Primary">
+            <Link to="/" className="font-bold tracking-tight text-lg">FitSense</Link>
+            
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:flex items-center gap-1" aria-label="Primary">
               {tabs.map(({ to, label, icon: Icon }) => (
                 <NavLink
                   key={to}
@@ -47,9 +52,58 @@ export default function AppLayout() {
             </nav>
             
             <div className="flex items-center gap-2">
+              {/* Mobile Navigation */}
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm" className="lg:hidden">
+                    <Menu className="h-5 w-5" />
+                    <span className="sr-only">Open menu</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-64">
+                  <nav className="flex flex-col gap-4 mt-8">
+                    {tabs.map(({ to, label, icon: Icon }) => (
+                      <NavLink
+                        key={to}
+                        to={to}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 px-3 py-2 rounded-md transition-smooth ${isActive ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground"}`
+                        }
+                      >
+                        <Icon className="h-5 w-5" />
+                        <span>{label}</span>
+                      </NavLink>
+                    ))}
+                    <div className="mt-8 pt-4 border-t">
+                      <div className="flex items-center gap-3 px-3 py-2 mb-4">
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback>
+                            {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <p className="text-sm font-medium">{user?.name || 'User'}</p>
+                          <p className="text-xs text-muted-foreground">{user?.email}</p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        onClick={() => { logout(); setMobileMenuOpen(false); }}
+                        className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Log out
+                      </Button>
+                    </div>
+                  </nav>
+                </SheetContent>
+              </Sheet>
+
+              {/* Desktop User Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full hidden lg:flex">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback>
                         {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
