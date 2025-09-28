@@ -17,6 +17,7 @@ import Suggestions from "./pages/Suggestions";
 import TryOn from "./pages/TryOn";
 import Settings from "./pages/Settings";
 import Assistant from "./pages/Assistant";
+import Pricing from "./pages/Pricing";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ const App = () => (
               <Route path="/suggestions" element={<Suggestions />} />
               <Route path="/assistant" element={<Assistant />} />
               <Route path="/tryon" element={<TryOn />} />
+              <Route path="/pricing" element={<Pricing />} />
               <Route path="/settings" element={<Settings />} />
             </Route>
             
