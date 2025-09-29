@@ -1,4 +1,5 @@
-import { AppSettings, ClothingItem, OutfitAnalysis, OutfitSuggestion, TryOnJob, getMockCloset, getSettings, setMockCloset, getMockTryonJobs, setMockTryonJobs } from "./settings";
+import { AppSettings, ClothingCategory, ClothingItem, OutfitAnalysis, OutfitSuggestion, TryOnJob, getSettings } from "./settings";
+import { supabase } from "@/integrations/supabase/client";
 
 function sleep(ms: number) {
   return new Promise((res) => setTimeout(res, ms));
@@ -76,38 +77,55 @@ export async function analyzeItems(items: { imageUrl: string; category: string }
 }
 
 export async function getCloset(): Promise<ClothingItem[]> {
-  const s = getSettings();
-  if (s.mockMode) {
-    await sleep(500);
-    return getMockCloset();
-  }
-  const res = await fetch(`${s.apiBaseUrl}/v1/closet/items`, { headers: headers(s) });
-  if (!res.ok) throw new Error('Failed to load closet');
-  return res.json();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase
+    .from('closet_items')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  
+  return data.map(item => ({
+    id: item.id,
+    imageUrl: item.image_url,
+    category: item.category as ClothingCategory,
+    colorHex: item.color || undefined,
+    colorName: item.color || undefined,
+    brand: item.brand || undefined,
+  }));
 }
 
 export async function addClosetItem(item: ClothingItem): Promise<void> {
-  const s = getSettings();
-  if (s.mockMode) {
-    await sleep(400);
-    const list = getMockCloset();
-    setMockCloset([item, ...list]);
-    return;
-  }
-  const res = await fetch(`${s.apiBaseUrl}/v1/closet/items`, { method: 'POST', headers: headers(s), body: JSON.stringify(item) });
-  if (!res.ok) throw new Error('Failed to add item');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { error } = await supabase
+    .from('closet_items')
+    .insert({
+      user_id: user.id,
+      image_url: item.imageUrl || '',
+      category: item.category,
+      color: item.colorName || item.colorHex || null,
+      brand: item.brand || null,
+    });
+
+  if (error) throw error;
 }
 
 export async function deleteClosetItem(id: string): Promise<void> {
-  const s = getSettings();
-  if (s.mockMode) {
-    await sleep(300);
-    const list = getMockCloset();
-    setMockCloset(list.filter((i) => i.id !== id));
-    return;
-  }
-  const res = await fetch(`${s.apiBaseUrl}/v1/closet/items?id=${encodeURIComponent(id)}`, { method: 'DELETE', headers: headers(s) });
-  if (!res.ok) throw new Error('Failed to delete item');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { error } = await supabase
+    .from('closet_items')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id);
+
+  if (error) throw error;
 }
 
 export async function getSuggestions(occasion: string, palette?: string, limit: number = 5): Promise<OutfitSuggestion[]> {
@@ -138,39 +156,48 @@ export async function getSuggestions(occasion: string, palette?: string, limit: 
 }
 
 export async function createTryOnJob(items: ClothingItem[]): Promise<TryOnJob> {
-  const s = getSettings();
-  if (s.mockMode) {
-    await sleep(400);
-    const job: TryOnJob = { id: `job_${Date.now()}`, status: 'queued', resultImageUrl: null };
-    const jobs = getMockTryonJobs();
-    setMockTryonJobs([job, ...jobs]);
-    // simulate processing to done in background
-    setTimeout(() => {
-      const cur = getMockTryonJobs();
-      const idx = cur.findIndex((j) => j.id === job.id);
-      if (idx >= 0) {
-        cur[idx] = { ...cur[idx], status: 'done', resultImageUrl: 'https://example.com/tryon/result.jpg' };
-        setMockTryonJobs(cur);
-      }
-    }, 2500);
-    return job;
-  }
-  const res = await fetch(`${s.apiBaseUrl}/v1/tryon/jobs`, { method: 'POST', headers: headers(s), body: JSON.stringify({ items }) });
-  if (!res.ok) throw new Error('Failed to create try-on job');
-  return res.json();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase
+    .from('try_on_jobs')
+    .insert({
+      user_id: user.id,
+      status: 'queued',
+      items: items as any,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  const status = data.status as 'queued' | 'processing' | 'done' | 'failed';
+  return {
+    id: data.id,
+    status,
+    resultImageUrl: data.result_image_url,
+  };
 }
 
 export async function getTryOnJob(id: string): Promise<TryOnJob> {
-  const s = getSettings();
-  if (s.mockMode) {
-    await sleep(500);
-    const cur = getMockTryonJobs();
-    const found = cur.find((j) => j.id === id);
-    return found || { id, status: 'processing', resultImageUrl: null };
-  }
-  const res = await fetch(`${s.apiBaseUrl}/v1/tryon/jobs/${id}`, { headers: headers(s) });
-  if (!res.ok) throw new Error('Failed to get job');
-  return res.json();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase
+    .from('try_on_jobs')
+    .select('*')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .single();
+
+  if (error) throw error;
+
+  const status = data.status as 'queued' | 'processing' | 'done' | 'failed';
+  return {
+    id: data.id,
+    status,
+    resultImageUrl: data.result_image_url,
+  };
 }
 
 export async function testConnection(): Promise<boolean> {

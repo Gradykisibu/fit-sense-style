@@ -80,11 +80,11 @@ export default function AppLayout() {
                       <div className="flex items-center gap-3 px-3 py-2 mb-4">
                         <Avatar className="h-8 w-8">
                           <AvatarFallback>
-                            {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                            {(user?.user_metadata?.name as string)?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
-                          <p className="text-sm font-medium">{user?.name || 'User'}</p>
+                          <p className="text-sm font-medium">{(user?.user_metadata?.name as string) || 'User'}</p>
                           <p className="text-xs text-muted-foreground">{user?.email}</p>
                         </div>
                       </div>
@@ -107,7 +107,7 @@ export default function AppLayout() {
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full hidden lg:flex">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback>
-                        {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                        {(user?.user_metadata?.name as string)?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -116,7 +116,7 @@ export default function AppLayout() {
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">
-                        {user?.name || 'User'}
+                        {(user?.user_metadata?.name as string) || 'User'}
                       </p>
                       <p className="text-xs leading-none text-muted-foreground">
                         {user?.email}

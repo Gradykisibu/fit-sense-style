@@ -1,16 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-
-interface User {
-  id: string;
-  email: string;
-  name?: string;
-}
+import { supabase } from '@/integrations/supabase/client';
+import { User, Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name?: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   loading: boolean;
 }
 
@@ -26,66 +23,68 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored user on mount
-    const storedUser = localStorage.getItem('fitSenseUser');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        localStorage.removeItem('fitSenseUser');
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
       }
-    }
-    setLoading(false);
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Mock login - in real app this would call your auth API
-    if (password.length < 6) {
-      throw new Error('Password must be at least 6 characters');
-    }
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const mockUser: User = {
-      id: '1',
+    const { error } = await supabase.auth.signInWithPassword({
       email,
-      name: email.split('@')[0],
-    };
-    
-    setUser(mockUser);
-    localStorage.setItem('fitSenseUser', JSON.stringify(mockUser));
+      password,
+    });
+
+    if (error) {
+      throw error;
+    }
   };
 
   const register = async (email: string, password: string, name?: string) => {
-    // Mock registration - in real app this would call your auth API
-    if (password.length < 6) {
-      throw new Error('Password must be at least 6 characters');
-    }
+    const redirectUrl = `${window.location.origin}/`;
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const mockUser: User = {
-      id: '1',
+    const { error } = await supabase.auth.signUp({
       email,
-      name: name || email.split('@')[0],
-    };
-    
-    setUser(mockUser);
-    localStorage.setItem('fitSenseUser', JSON.stringify(mockUser));
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          name: name || email.split('@')[0],
+        },
+      },
+    });
+
+    if (error) {
+      throw error;
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('fitSenseUser');
+  const logout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      throw error;
+    }
   };
 
   const value = {
     user,
+    session,
     login,
     register,
     logout,
