@@ -1,0 +1,92 @@
+[
+  {
+    "code": "US",
+    "name": "United States",
+    "currency": "USD",
+    "currencySymbol": "$"
+  },
+  {
+    "code": "GB",
+    "name": "United Kingdom",
+    "currency": "GBP",
+    "currencySymbol": "£"
+  },
+  {
+    "code": "EU",
+    "name": "European Union",
+    "currency": "EUR",
+    "currencySymbol": "€"
+  },
+  {
+    "code": "CA",
+    "name": "Canada",
+    "currency": "CAD",
+    "currencySymbol": "C$"
+  },
+  {
+    "code": "AU",
+    "name": "Australia",
+    "currency": "AUD",
+    "currencySymbol": "A$"
+  },
+  {
+    "code": "IN",
+    "name": "India",
+    "currency": "INR",
+    "currencySymbol": "₹"
+  },
+  {
+    "code": "JP",
+    "name": "Japan",
+    "currency": "JPY",
+    "currencySymbol": "¥"
+  },
+  {
+    "code": "CN",
+    "name": "China",
+    "currency": "CNY",
+    "currencySymbol": "¥"
+  },
+  {
+    "code": "BR",
+    "name": "Brazil",
+    "currency": "BRL",
+    "currencySymbol": "R$"
+  },
+  {
+    "code": "MX",
+    "name": "Mexico",
+    "currency": "MXN",
+    "currencySymbol": "$"
+  },
+  {
+    "code": "ZA",
+    "name": "South Africa",
+    "currency": "ZAR",
+    "currencySymbol": "R"
+  },
+  {
+    "code": "NG",
+    "name": "Nigeria",
+    "currency": "NGN",
+    "currencySymbol": "₦"
+  },
+  {
+    "code": "KE",
+    "name": "Kenya",
+    "currency": "KES",
+    "currencySymbol": "KSh"
+  },
+  {
+    "code": "SG",
+    "name": "Singapore",
+    "currency": "SGD",
+    "currencySymbol": "S$"
+  },
+  {
+    "code": "AE",
+    "name": "United Arab Emirates",
+    "currency": "AED",
+    "currencySymbol": "د.إ"
+  }
+]
