@@ -96,7 +96,7 @@ export default function Register() {
                     <SelectTrigger className="w-[110px]">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-h-[200px]">
                       {countries.map((c) => (
                         <SelectItem key={c.code} value={c.phoneCode}>
                           {c.phoneCode}
