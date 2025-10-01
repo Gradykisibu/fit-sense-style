@@ -3,90 +3,105 @@
     "code": "US",
     "name": "United States",
     "currency": "USD",
-    "currencySymbol": "$"
+    "currencySymbol": "$",
+    "phoneCode": "+1"
   },
   {
     "code": "GB",
     "name": "United Kingdom",
     "currency": "GBP",
-    "currencySymbol": "£"
+    "currencySymbol": "£",
+    "phoneCode": "+44"
   },
   {
     "code": "EU",
     "name": "European Union",
     "currency": "EUR",
-    "currencySymbol": "€"
+    "currencySymbol": "€",
+    "phoneCode": "+33"
   },
   {
     "code": "CA",
     "name": "Canada",
     "currency": "CAD",
-    "currencySymbol": "C$"
+    "currencySymbol": "C$",
+    "phoneCode": "+1"
   },
   {
     "code": "AU",
     "name": "Australia",
     "currency": "AUD",
-    "currencySymbol": "A$"
+    "currencySymbol": "A$",
+    "phoneCode": "+61"
   },
   {
     "code": "IN",
     "name": "India",
     "currency": "INR",
-    "currencySymbol": "₹"
+    "currencySymbol": "₹",
+    "phoneCode": "+91"
   },
   {
     "code": "JP",
     "name": "Japan",
     "currency": "JPY",
-    "currencySymbol": "¥"
+    "currencySymbol": "¥",
+    "phoneCode": "+81"
   },
   {
     "code": "CN",
     "name": "China",
     "currency": "CNY",
-    "currencySymbol": "¥"
+    "currencySymbol": "¥",
+    "phoneCode": "+86"
   },
   {
     "code": "BR",
     "name": "Brazil",
     "currency": "BRL",
-    "currencySymbol": "R$"
+    "currencySymbol": "R$",
+    "phoneCode": "+55"
   },
   {
     "code": "MX",
     "name": "Mexico",
     "currency": "MXN",
-    "currencySymbol": "$"
+    "currencySymbol": "$",
+    "phoneCode": "+52"
   },
   {
     "code": "ZA",
     "name": "South Africa",
     "currency": "ZAR",
-    "currencySymbol": "R"
+    "currencySymbol": "R",
+    "phoneCode": "+27"
   },
   {
     "code": "NG",
     "name": "Nigeria",
     "currency": "NGN",
-    "currencySymbol": "₦"
+    "currencySymbol": "₦",
+    "phoneCode": "+234"
   },
   {
     "code": "KE",
     "name": "Kenya",
     "currency": "KES",
-    "currencySymbol": "KSh"
+    "currencySymbol": "KSh",
+    "phoneCode": "+254"
   },
   {
     "code": "SG",
     "name": "Singapore",
     "currency": "SGD",
-    "currencySymbol": "S$"
+    "currencySymbol": "S$",
+    "phoneCode": "+65"
   },
   {
     "code": "AE",
     "name": "United Arab Emirates",
     "currency": "AED",
-    "currencySymbol": "د.إ"
+    "currencySymbol": "د.إ",
+    "phoneCode": "+971"
   }
 ]
