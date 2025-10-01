@@ -107,7 +107,7 @@ export default function Register() {
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="555 000 0000"
+                    placeholder={countries.find(c => c.phoneCode === phoneCode)?.phoneFormat || "555 000 0000"}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="flex-1"

@@ -4,104 +4,119 @@
     "name": "United States",
     "currency": "USD",
     "currencySymbol": "$",
-    "phoneCode": "+1"
+    "phoneCode": "+1",
+    "phoneFormat": "555 000 0000"
   },
   {
     "code": "GB",
     "name": "United Kingdom",
     "currency": "GBP",
     "currencySymbol": "£",
-    "phoneCode": "+44"
+    "phoneCode": "+44",
+    "phoneFormat": "7911 123456"
   },
   {
     "code": "EU",
     "name": "European Union",
     "currency": "EUR",
     "currencySymbol": "€",
-    "phoneCode": "+33"
+    "phoneCode": "+33",
+    "phoneFormat": "6 12 34 56 78"
   },
   {
     "code": "CA",
     "name": "Canada",
     "currency": "CAD",
     "currencySymbol": "C$",
-    "phoneCode": "+1"
+    "phoneCode": "+1",
+    "phoneFormat": "555 000 0000"
   },
   {
     "code": "AU",
     "name": "Australia",
     "currency": "AUD",
     "currencySymbol": "A$",
-    "phoneCode": "+61"
+    "phoneCode": "+61",
+    "phoneFormat": "412 345 678"
   },
   {
     "code": "IN",
     "name": "India",
     "currency": "INR",
     "currencySymbol": "₹",
-    "phoneCode": "+91"
+    "phoneCode": "+91",
+    "phoneFormat": "98765 43210"
   },
   {
     "code": "JP",
     "name": "Japan",
     "currency": "JPY",
     "currencySymbol": "¥",
-    "phoneCode": "+81"
+    "phoneCode": "+81",
+    "phoneFormat": "90 1234 5678"
   },
   {
     "code": "CN",
     "name": "China",
     "currency": "CNY",
     "currencySymbol": "¥",
-    "phoneCode": "+86"
+    "phoneCode": "+86",
+    "phoneFormat": "138 0013 8000"
   },
   {
     "code": "BR",
     "name": "Brazil",
     "currency": "BRL",
     "currencySymbol": "R$",
-    "phoneCode": "+55"
+    "phoneCode": "+55",
+    "phoneFormat": "11 91234 5678"
   },
   {
     "code": "MX",
     "name": "Mexico",
     "currency": "MXN",
     "currencySymbol": "$",
-    "phoneCode": "+52"
+    "phoneCode": "+52",
+    "phoneFormat": "55 1234 5678"
   },
   {
     "code": "ZA",
     "name": "South Africa",
     "currency": "ZAR",
     "currencySymbol": "R",
-    "phoneCode": "+27"
+    "phoneCode": "+27",
+    "phoneFormat": "71 123 4567"
   },
   {
     "code": "NG",
     "name": "Nigeria",
     "currency": "NGN",
     "currencySymbol": "₦",
-    "phoneCode": "+234"
+    "phoneCode": "+234",
+    "phoneFormat": "802 123 4567"
   },
   {
     "code": "KE",
     "name": "Kenya",
     "currency": "KES",
     "currencySymbol": "KSh",
-    "phoneCode": "+254"
+    "phoneCode": "+254",
+    "phoneFormat": "712 345678"
   },
   {
     "code": "SG",
     "name": "Singapore",
     "currency": "SGD",
     "currencySymbol": "S$",
-    "phoneCode": "+65"
+    "phoneCode": "+65",
+    "phoneFormat": "8123 4567"
   },
   {
     "code": "AE",
     "name": "United Arab Emirates",
     "currency": "AED",
     "currencySymbol": "د.إ",
-    "phoneCode": "+971"
+    "phoneCode": "+971",
+    "phoneFormat": "50 123 4567"
   }
 ]
