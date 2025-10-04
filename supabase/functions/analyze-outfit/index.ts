@@ -31,6 +31,20 @@ serve(async (req) => {
     let imageBase64: string;
     let items: Array<{ imageUrl: string; category: string }> = [];
 
+    // Helper function to convert ArrayBuffer to base64 without stack overflow
+    const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
+      const bytes = new Uint8Array(buffer);
+      const chunkSize = 0x8000; // Process 32KB at a time
+      let binary = '';
+      
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        const chunk = bytes.slice(i, Math.min(i + chunkSize, bytes.length));
+        binary += String.fromCharCode.apply(null, Array.from(chunk));
+      }
+      
+      return btoa(binary);
+    };
+
     if (contentType.includes('multipart/form-data')) {
       // Handle file upload
       const formData = await req.formData();
@@ -39,7 +53,7 @@ serve(async (req) => {
         throw new Error('No image file provided');
       }
       const arrayBuffer = await file.arrayBuffer();
-      imageBase64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+      imageBase64 = arrayBufferToBase64(arrayBuffer);
     } else {
       // Handle JSON with image URLs
       const body = await req.json();
@@ -50,7 +64,7 @@ serve(async (req) => {
       // For simplicity, analyze the first item's image
       const response = await fetch(items[0].imageUrl);
       const arrayBuffer = await response.arrayBuffer();
-      imageBase64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+      imageBase64 = arrayBufferToBase64(arrayBuffer);
     }
 
     // Call Lovable AI Gateway with Gemini 2.5 Flash
