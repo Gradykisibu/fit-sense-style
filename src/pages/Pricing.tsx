@@ -1,67 +1,60 @@
+import { useEffect, useState } from "react";
 import { useDocumentTitle } from "@/lib/useDocumentTitle";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, Crown, Star, Zap } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { basePlans, convertPrice, getCurrency, getCurrencySymbol, formatPrice } from "@/lib/pricing";
+import { useToast } from "@/hooks/use-toast";
 
 const Pricing = () => {
   useDocumentTitle("Pricing – FitSense");
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [userCountry, setUserCountry] = useState<string>('US');
+  const [currencySymbol, setCurrencySymbol] = useState<string>('$');
+  const [currency, setCurrency] = useState<string>('USD');
 
-  const plans = [
-    {
-      name: "Basic",
-      price: "$9",
-      period: "/month",
-      description: "Perfect for getting started with AI fashion advice",
-      icon: <Star className="h-6 w-6" />,
-      features: [
-        "50 outfit analyses per month",
-        "Basic style feedback",
-        "Limited closet storage (25 items)",
-        "Standard support",
-        "Mobile app access"
-      ],
-      buttonText: "Get Started",
-      popular: false
-    },
-    {
-      name: "Premium",
-      price: "$19",
-      period: "/month",
-      description: "Most popular choice for fashion enthusiasts",
-      icon: <Crown className="h-6 w-6" />,
-      features: [
-        "Unlimited outfit analyses",
-        "Advanced style recommendations",
-        "Unlimited closet storage",
-        "Mix & match suggestions",
-        "Priority support",
-        "Seasonal trend reports",
-        "Virtual try-on (10 per month)"
-      ],
-      buttonText: "Go Premium",
-      popular: true
-    },
-    {
-      name: "Pro",
-      price: "$39",
-      period: "/month",
-      description: "Complete solution for style professionals and influencers",
-      icon: <Zap className="h-6 w-6" />,
-      features: [
-        "Everything in Premium",
-        "Unlimited virtual try-ons",
-        "Personal AI stylist assistant",
-        "Brand partnership opportunities",
-        "Custom style analytics",
-        "White-label solutions",
-        "24/7 premium support",
-        "API access for integrations"
-      ],
-      buttonText: "Go Pro",
-      popular: false
-    }
-  ];
+  useEffect(() => {
+    const fetchUserCountry = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('country')
+          .eq('id', user.id)
+          .single();
+        
+        if (data?.country) {
+          setUserCountry(data.country);
+          setCurrency(getCurrency(data.country));
+          setCurrencySymbol(getCurrencySymbol(data.country));
+        }
+      }
+    };
+
+    fetchUserCountry();
+  }, [user]);
+
+  const handleSubscribe = (planName: string) => {
+    toast({
+      title: "Coming Soon!",
+      description: `${planName} subscription will be available soon. We'll notify you when it's ready!`,
+    });
+  };
+
+  const planIcons = {
+    Basic: <Star className="h-6 w-6" />,
+    Premium: <Crown className="h-6 w-6" />,
+    Pro: <Zap className="h-6 w-6" />
+  };
+
+  const plans = basePlans.map(plan => ({
+    ...plan,
+    price: formatPrice(convertPrice(plan.basePrice, currency), currencySymbol),
+    icon: planIcons[plan.name as keyof typeof planIcons]
+  }));
 
   return (
     <main className="container mx-auto px-6 py-12">
@@ -120,6 +113,7 @@ const Pricing = () => {
                 className="w-full" 
                 variant={plan.popular ? "default" : "outline"}
                 size="lg"
+                onClick={() => handleSubscribe(plan.name)}
               >
                 {plan.buttonText}
               </Button>

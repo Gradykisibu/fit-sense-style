@@ -38,7 +38,8 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      await register(email, password, name);
+      const fullPhone = phone ? `${phoneCode} ${phone}` : undefined;
+      await register(email, password, name, country, fullPhone);
       toast({ title: 'Account created!', description: 'Welcome to FitSense!' });
       navigate('/');
     } catch (error) {
