@@ -12,67 +12,47 @@ function headers(settings: AppSettings) {
   };
 }
 
-export async function analyzeOutfitImage(_file: File): Promise<OutfitAnalysis> {
-  const s = getSettings();
-  if (s.mockMode) {
-    await sleep(900);
-    return {
-      overallScore: 78,
-      verdict: 'okay',
-      comments: ['Hat and shoes align in style; pants are slightly off‑palette.'],
-      detectedItems: [
-        { id: 'top1', category: 't-shirt', colorHex: '#F4D03F', colorName: 'Mustard', imageUrl: 'https://example.com/tshirt.jpg' },
-        { id: 'pants1', category: 'pants', colorHex: '#1C2833', colorName: 'Charcoal', imageUrl: 'https://example.com/pants.jpg' },
-        { id: 'shoes1', category: 'shoes', colorHex: '#FDFEFE', colorName: 'White', imageUrl: 'https://example.com/shoes.jpg' },
-        { id: 'hat1', category: 'hat', colorHex: '#1B4F72', colorName: 'Navy', imageUrl: 'https://example.com/hat.jpg' },
-      ],
-      perItem: [
-        { itemId: 'hat1', score: 85, issues: [], suggestions: [] },
-        { itemId: 'pants1', score: 60, issues: ['too dark vs pastel top'], suggestions: ['try beige chinos'] },
-      ],
-      colorHarmony: {
-        score: 74,
-        palette: ['#F4D03F','#1C2833','#FDFEFE','#1B4F72'],
-        rulesMatched: ['accent‑neutral'],
-        clashes: ['charcoal pants heavy against mustard top'],
-      },
-      suggestedSwaps: [
-        { replaceItemId: 'pants1', suggestion: 'Swap to beige chinos or light wash jeans.', exampleItem: { id: 'eg-pants', category: 'pants', colorHex: '#D6C9A3', colorName: 'Beige' } },
-      ],
-    };
-  }
+export async function analyzeOutfitImage(file: File): Promise<OutfitAnalysis> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
 
-  const form = new FormData();
-  form.append('image', _file);
-  const res = await fetch(`${s.apiBaseUrl}/v1/analyze/outfit-image`, {
+  const formData = new FormData();
+  formData.append('image', file);
+
+  const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-outfit`, {
     method: 'POST',
-    headers: { 'x-api-key': s.apiKey || '' },
-    body: form,
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+    },
+    body: formData,
   });
-  if (!res.ok) throw new Error('Failed to analyze outfit image');
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || 'Failed to analyze outfit image');
+  }
+  
   return res.json();
 }
 
 export async function analyzeItems(items: { imageUrl: string; category: string }[]): Promise<OutfitAnalysis> {
-  const s = getSettings();
-  if (s.mockMode) {
-    await sleep(900);
-    return {
-      overallScore: 82,
-      verdict: 'great',
-      comments: ['Sporty casual combo with good contrast.'],
-      detectedItems: [],
-      perItem: [
-        { itemId: 'top', score: 84, issues: [], suggestions: [] },
-        { itemId: 'pants', score: 79, issues: [], suggestions: [] },
-        { itemId: 'shoes', score: 88, issues: [], suggestions: [] },
-      ],
-      colorHarmony: { score: 80, palette: ['#2E86AB','#EAF2F8','#2ECC71'], rulesMatched: ['complementary'], clashes: [] },
-      suggestedSwaps: [],
-    };
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
+  const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-outfit`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ items }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || 'Failed to analyze items');
   }
-  const res = await fetch(`${s.apiBaseUrl}/v1/analyze/items`, { method: 'POST', headers: headers(s), body: JSON.stringify({ items }) });
-  if (!res.ok) throw new Error('Failed to analyze items');
+  
   return res.json();
 }
 
