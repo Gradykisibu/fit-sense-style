@@ -98,11 +98,13 @@ export default function Register() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="max-h-[200px]">
-                      {countries.map((c) => (
-                        <SelectItem key={c.code} value={c.phoneCode}>
-                          {c.phoneCode}
-                        </SelectItem>
-                      ))}
+                      {Array.from(new Set(countries.map(c => c.phoneCode)))
+                        .sort()
+                        .map((code) => (
+                          <SelectItem key={code} value={code}>
+                            {code}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                   <Input
