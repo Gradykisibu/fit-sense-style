@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useDocumentTitle } from '@/lib/useDocumentTitle';
-import { Bot, User, Sparkles, Send, Image as ImageIcon, Plus, History, X } from 'lucide-react';
+import { Bot, User, Sparkles, Send, Image as ImageIcon, Plus, History, X, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -169,6 +169,35 @@ export default function Assistant() {
       .eq('id', conversationId);
   };
 
+  const deleteConversation = async (conversationId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent loading the conversation when clicking delete
+    
+    const { error } = await supabase
+      .from('conversations')
+      .delete()
+      .eq('id', conversationId);
+
+    if (!error) {
+      // If we're deleting the current conversation, clear it
+      if (conversationId === currentConversationId) {
+        setCurrentConversationId(null);
+        setMessages([]);
+      }
+      
+      loadConversations();
+      toast({
+        title: 'Deleted',
+        description: 'Conversation deleted successfully',
+      });
+    } else {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete conversation',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!input.trim() && !selectedImage) return;
 
@@ -314,19 +343,31 @@ export default function Assistant() {
               </DialogHeader>
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {conversations.map((conv) => (
-                  <Button
+                  <div
                     key={conv.id}
-                    variant={conv.id === currentConversationId ? 'secondary' : 'ghost'}
-                    className="w-full justify-start"
-                    onClick={() => loadConversation(conv.id)}
+                    className="flex items-center gap-2 group"
                   >
-                    <div className="flex flex-col items-start">
-                      <span className="font-medium">{conv.title}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(conv.updated_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </Button>
+                    <Button
+                      variant={conv.id === currentConversationId ? 'secondary' : 'ghost'}
+                      className="flex-1 justify-start"
+                      onClick={() => loadConversation(conv.id)}
+                    >
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">{conv.title}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(conv.updated_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => deleteConversation(conv.id, e)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
                 ))}
               </div>
             </DialogContent>
