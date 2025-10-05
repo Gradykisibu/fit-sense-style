@@ -27,6 +27,15 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
+    // Get user's name from profiles
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('name')
+      .eq('id', user.id)
+      .single();
+    
+    const userName = profile?.name || 'there';
+
     const contentType = req.headers.get('content-type') || '';
     let imageBase64: string;
     let items: Array<{ imageUrl: string; category: string }> = [];
@@ -95,7 +104,15 @@ serve(async (req) => {
 6. Color harmony analysis with palette and any clashes
 7. Suggested swaps to improve the outfit
 
-**CRITICAL - How to write suggestions:**
+**SPECIAL RULE FOR HIGH SCORES (80+):**
+If the overall score is 80 or above, DO NOT provide any swap suggestions. Instead:
+- Set "suggestedSwaps" to an empty array []
+- In the "comments" section, add a personalized compliment addressing "${userName}" directly
+- Use 1-2 emojis naturally in the compliment
+- Make it warm, genuine, and specific to what makes the outfit great
+- Example: "Hey ${userName}! This outfit is absolutely killing it! 🔥 The colors work so well together and everything fits your style perfectly. Keep rocking it! ✨"
+
+**CRITICAL - How to write suggestions (for scores below 80):**
 Each suggestion must be written in friendly, everyday language:
 - Start with "**Change the [item]:**" or "**Try a different [item]:**"
 - Explain WHAT to change in 1-2 simple sentences
