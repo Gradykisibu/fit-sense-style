@@ -82,7 +82,9 @@ serve(async (req) => {
             content: [
               {
                 type: 'text',
-                text: `You are a professional fashion stylist analyzing an outfit image. Please analyze the outfit and provide:
+                text: `You are a friendly fashion expert helping people improve their outfits using simple, clear language.
+
+Analyze this outfit and provide:
 1. An overall style score (0-100)
 2. A verdict (poor/okay/good/great/perfect)
 3. Detailed comments about the outfit
@@ -90,6 +92,12 @@ serve(async (req) => {
 5. Per-item scores and suggestions
 6. Color harmony analysis with palette and any clashes
 7. Suggested swaps for improvement
+
+IMPORTANT for suggestedSwaps: Write each suggestion in simple, friendly language that anyone can understand.
+- Start with "**Change the [item]:**" or "**Try a different [item]:**"
+- Then explain WHAT to change and briefly WHY it helps
+- Use phrases like "Try a...", "Go for...", "Pick..." instead of technical fashion terms
+- Example: "**Change the blazer:** Try a plain black or navy blazer instead of plaid. It looks cleaner and matches more outfits."
 
 Return ONLY a valid JSON object with this exact structure:
 {

@@ -1,0 +1,75 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
+  try {
+    const { suggestions } = await req.json();
+    
+    if (!suggestions || !Array.isArray(suggestions)) {
+      throw new Error('Suggestions array is required');
+    }
+
+    // Build a descriptive prompt from the suggestions
+    const improvementSummary = suggestions
+      .map((s: string) => s.replace(/\*\*/g, ''))
+      .join('. ');
+    
+    const prompt = `A professional fashion photograph of a person wearing an improved outfit: ${improvementSummary}. Clean neutral background, realistic style, full body shot, professional lighting, modern fashion photography, high quality.`;
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-image-preview',
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        modalities: ['image', 'text'],
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('AI Gateway error:', errorText);
+      throw new Error(`Failed to generate image: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    
+    if (!imageUrl) {
+      throw new Error('No image in AI response');
+    }
+
+    return new Response(
+      JSON.stringify({ imageUrl }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      },
+    );
+  } catch (error) {
+    console.error('Error in generate-outfit-image function:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      },
+    );
+  }
+});
