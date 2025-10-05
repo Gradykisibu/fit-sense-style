@@ -7,6 +7,8 @@ import { useDocumentTitle } from '@/lib/useDocumentTitle';
 import { Bot, User, Sparkles, Send, Image as ImageIcon, Plus, History, X, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { Badge } from '@/components/ui/badge';
+import { canPerformAction } from '@/lib/subscription';
 import {
   Dialog,
   DialogContent,
@@ -40,6 +42,8 @@ export default function Assistant() {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [userPlan, setUserPlan] = useState<string>('free');
+  const [usageInfo, setUsageInfo] = useState<any>(null);
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -47,7 +51,21 @@ export default function Assistant() {
   // Load conversations on mount
   useEffect(() => {
     loadConversations();
+    fetchUserUsage();
   }, []);
+
+  const fetchUserUsage = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('profiles')
+      .select('subscription_plan, monthly_chats_used')
+      .eq('id', user.id)
+      .single();
+    if (data) {
+      setUserPlan(data.subscription_plan || 'free');
+      setUsageInfo(data);
+    }
+  };
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -200,6 +218,21 @@ export default function Assistant() {
 
   const handleSendMessage = async () => {
     if (!input.trim() && !selectedImage) return;
+
+    // Check usage limits
+    const usageCheck = canPerformAction('chat', usageInfo?.monthly_chats_used || 0, userPlan as any);
+    if (!usageCheck.allowed) {
+      toast({
+        title: 'Limit Reached',
+        description: usageCheck.message,
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    if (usageCheck.message) {
+      toast({ title: 'Usage Warning', description: usageCheck.message });
+    }
 
     let conversationId = currentConversationId;
     if (!conversationId) {
@@ -367,6 +400,14 @@ export default function Assistant() {
 
       // Save final assistant message
       await saveMessage(conversationId, 'assistant', assistantContent);
+      
+      // Update usage count
+      await supabase
+        .from('profiles')
+        .update({ monthly_chats_used: (usageInfo?.monthly_chats_used || 0) + 1 })
+        .eq('id', user?.id!);
+      
+      fetchUserUsage();
       loadConversations();
     } catch (error: any) {
       toast({
@@ -379,6 +420,8 @@ export default function Assistant() {
     }
   };
 
+  const isPro = userPlan === 'pro';
+
   return (
     <main className="container mx-auto px-6 py-8 max-w-5xl">
       <div className="flex items-center justify-between mb-6">
@@ -386,7 +429,15 @@ export default function Assistant() {
           <div className="bg-primary/10 p-2 rounded-full">
             <Sparkles className="h-6 w-6 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold">AI Style Assistant</h1>
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              AI Style Assistant
+              {isPro && <Badge className="bg-gradient-to-r from-purple-500 to-pink-500">Pro</Badge>}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {isPro ? 'Unlimited personalized style advice' : 'Get personalized style advice'}
+            </p>
+          </div>
         </div>
         <div className="flex gap-2">
           <Dialog>

@@ -17,6 +17,8 @@ import Settings from "./pages/Settings";
 import Assistant from "./pages/Assistant";
 import Pricing from "./pages/Pricing";
 import Snapshots from "./pages/Snapshots";
+import Trends from "./pages/Trends";
+import Analytics from "./pages/Analytics";
 
 const queryClient = new QueryClient();
 
@@ -39,9 +41,11 @@ const App = () => (
               <Route path="/mix" element={<Mix />} />
               <Route path="/closet" element={<Closet />} />
               <Route path="/assistant" element={<Assistant />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/snapshots" element={<Snapshots />} />
-              <Route path="/settings" element={<Settings />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/snapshots" element={<Snapshots />} />
+                <Route path="/trends" element={<Trends />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/settings" element={<Settings />} />
             </Route>
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

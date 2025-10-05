@@ -212,9 +212,14 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          monthly_analyses_used: number
+          monthly_chats_used: number
           name: string | null
           phone: string | null
+          subscription_plan: string
+          subscription_start_date: string | null
           updated_at: string
+          usage_reset_date: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -222,9 +227,14 @@ export type Database = {
           created_at?: string
           email: string
           id: string
+          monthly_analyses_used?: number
+          monthly_chats_used?: number
           name?: string | null
           phone?: string | null
+          subscription_plan?: string
+          subscription_start_date?: string | null
           updated_at?: string
+          usage_reset_date?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -232,11 +242,104 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          monthly_analyses_used?: number
+          monthly_chats_used?: number
           name?: string | null
           phone?: string | null
+          subscription_plan?: string
+          subscription_start_date?: string | null
           updated_at?: string
+          usage_reset_date?: string | null
         }
         Relationships: []
+      }
+      style_analytics: {
+        Row: {
+          analysis_date: string
+          average_score: number | null
+          brand_preferences: Json
+          category_distribution: Json
+          color_distribution: Json
+          created_at: string
+          id: string
+          total_outfits_analyzed: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          analysis_date?: string
+          average_score?: number | null
+          brand_preferences?: Json
+          category_distribution?: Json
+          color_distribution?: Json
+          created_at?: string
+          id?: string
+          total_outfits_analyzed?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          analysis_date?: string
+          average_score?: number | null
+          brand_preferences?: Json
+          category_distribution?: Json
+          color_distribution?: Json
+          created_at?: string
+          id?: string
+          total_outfits_analyzed?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "style_analytics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trend_reports: {
+        Row: {
+          created_at: string
+          generated_at: string
+          id: string
+          insights: Json
+          recommendations: Json
+          report_period: string
+          user_id: string
+          wardrobe_analysis: Json
+        }
+        Insert: {
+          created_at?: string
+          generated_at?: string
+          id?: string
+          insights?: Json
+          recommendations?: Json
+          report_period: string
+          user_id: string
+          wardrobe_analysis?: Json
+        }
+        Update: {
+          created_at?: string
+          generated_at?: string
+          id?: string
+          insights?: Json
+          recommendations?: Json
+          report_period?: string
+          user_id?: string
+          wardrobe_analysis?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trend_reports_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       try_on_jobs: {
         Row: {
