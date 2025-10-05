@@ -18,6 +18,7 @@ import TryOn from "./pages/TryOn";
 import Settings from "./pages/Settings";
 import Assistant from "./pages/Assistant";
 import Pricing from "./pages/Pricing";
+import Snapshots from "./pages/Snapshots";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="/assistant" element={<Assistant />} />
               <Route path="/tryon" element={<TryOn />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/snapshots" element={<Snapshots />} />
               <Route path="/settings" element={<Settings />} />
             </Route>
             

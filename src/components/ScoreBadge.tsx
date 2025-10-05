@@ -1,12 +1,14 @@
 import React from 'react';
 
-export const verdictLabel: Record<'great' | 'okay' | 'revise', string> = {
-  great: 'Great',
+export const verdictLabel: Record<'poor' | 'okay' | 'good' | 'great' | 'perfect', string> = {
+  poor: 'Poor',
   okay: 'Okay',
-  revise: 'Revise',
+  good: 'Good',
+  great: 'Great',
+  perfect: 'Perfect',
 };
 
-export function ScoreBadge({ score, verdict }: { score: number; verdict: 'great' | 'okay' | 'revise' }) {
+export function ScoreBadge({ score, verdict }: { score: number; verdict: 'poor' | 'okay' | 'good' | 'great' | 'perfect' }) {
   return (
     <div className="inline-flex items-center gap-3 p-4 rounded-lg border bg-card shadow-soft">
       <div className="text-3xl font-extrabold tabular-nums" aria-label={`Score ${score}`}>{score}</div>
@@ -14,7 +16,7 @@ export function ScoreBadge({ score, verdict }: { score: number; verdict: 'great'
         <div className="text-muted-foreground">Overall</div>
         <div className="inline-flex items-center gap-2">
           <span className="text-foreground">Style Score</span>
-          <span className="px-2 py-0.5 text-xs rounded-full bg-accent text-foreground border">{verdictLabel[verdict]}</span>
+          <span className="px-2 py-0.5 text-xs rounded-full bg-accent text-foreground border">{verdictLabel[verdict] || verdict}</span>
         </div>
       </div>
     </div>

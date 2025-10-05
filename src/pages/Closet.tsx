@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ClosetItemCard } from '@/components/ClosetItemCard';
 import { addClosetItem, deleteClosetItem, getCloset } from '@/lib/api';
-import { ClothingItem } from '@/lib/settings';
+import { ClothingItem, generateSampleClosetData, setMockCloset } from '@/lib/settings';
 import { useToast } from '@/hooks/use-toast';
 
 const CATEGORIES: ClothingItem['category'][] = ['hat','t-shirt','shirt','hoodie','jacket','dress','skirt','pants','shorts','socks','shoes','belt','bag','accessory'];
@@ -37,14 +37,23 @@ export default function Closet() {
     try { await deleteClosetItem(id); toast({ title: 'Deleted' }); load(); } catch (e: any) { toast({ title: 'Failed to delete', description: e?.message }); }
   };
 
+  const addSampleData = () => {
+    const sampleItems = generateSampleClosetData();
+    setMockCloset(sampleItems);
+    setItems(sampleItems);
+    toast({ title: 'Added 20 sample items', description: 'Your closet now has example data for testing.' });
+  };
+
   return (
     <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h1 className="text-xl sm:text-2xl font-bold">My Closet</h1>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button>Add Item</Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={addSampleData}>Add Sample Data</Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button>Add Item</Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add Closet Item</DialogTitle>
@@ -76,8 +85,9 @@ export default function Closet() {
                 <Button onClick={onAdd}>Add</Button>
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {loading ? (

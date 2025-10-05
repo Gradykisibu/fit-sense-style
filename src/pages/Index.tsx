@@ -37,6 +37,8 @@ const Index = () => {
                 <span className="hidden sm:inline">·</span>
                 <Link to="/tryon" className="underline underline-offset-4 hover:text-foreground transition-colors">Try‑On</Link>
                 <span className="hidden sm:inline">·</span>
+                <Link to="/snapshots" className="underline underline-offset-4 hover:text-foreground transition-colors">Snapshots</Link>
+                <span className="hidden sm:inline">·</span>
                 <Link to="/settings" className="underline underline-offset-4 hover:text-foreground transition-colors">Settings</Link>
               </div>
             </div>

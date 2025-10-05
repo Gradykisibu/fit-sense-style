@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
-import { Camera, Shuffle, Shirt, Lightbulb, Wand2, Settings as SettingsIcon, House, Sparkles, User, LogOut, Menu, X, CreditCard } from "lucide-react";
+import { Camera, Shuffle, Shirt, Lightbulb, Wand2, Settings as SettingsIcon, House, Sparkles, User, LogOut, Menu, X, CreditCard, Save } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
 import {
@@ -22,6 +22,7 @@ const tabs = [
   { to: "/suggestions", label: "Suggestions", icon: Lightbulb },
   { to: "/assistant", label: "AI Assistant", icon: Sparkles },
   { to: "/tryon", label: "Try‑On", icon: Wand2 },
+  { to: "/snapshots", label: "Snapshots", icon: Save },
   { to: "/pricing", label: "Pricing", icon: CreditCard },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ];
