@@ -34,7 +34,9 @@ serve(async (req) => {
       .eq('id', user.id)
       .single();
     
-    const userName = profile?.name || 'there';
+    // Extract first name only
+    const fullName = profile?.name || 'there';
+    const userName = fullName.split(' ')[0];
 
     const contentType = req.headers.get('content-type') || '';
     let imageBase64: string;
