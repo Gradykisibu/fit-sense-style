@@ -72,6 +72,18 @@ export default function Check() {
           ) : (
             <>
               <ScoreBadge score={result.overallScore} verdict={result.verdict} />
+              {result.comments && result.comments.length > 0 && (
+                <Card>
+                  <CardHeader><CardTitle>Style Feedback</CardTitle></CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {result.comments.map((comment: string, idx: number) => (
+                        <li key={idx} className="text-sm">{comment}</li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
               <Card>
                 <CardHeader><CardTitle>Detected Items</CardTitle></CardHeader>
                 <CardContent><DetectedItemsList items={result.detectedItems || []} /></CardContent>
