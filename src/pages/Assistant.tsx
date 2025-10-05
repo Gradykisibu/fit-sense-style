@@ -215,6 +215,19 @@ export default function Assistant() {
       timestamp: new Date(),
     };
 
+    // Check if user is requesting outfit image generation
+    const isRequestingImage = input.toLowerCase().includes('yes') || 
+                               input.toLowerCase().includes('show') ||
+                               input.toLowerCase().includes('see') ||
+                               input.toLowerCase().includes('generate');
+    const lastAssistantMessage = messages.length > 0 && messages[messages.length - 1].role === 'assistant' 
+      ? messages[messages.length - 1].content 
+      : '';
+    const isOfferToGenerateImage = lastAssistantMessage.toLowerCase().includes('would you like') && 
+                                    (lastAssistantMessage.toLowerCase().includes('visual') || 
+                                     lastAssistantMessage.toLowerCase().includes('image') ||
+                                     lastAssistantMessage.toLowerCase().includes('see'));
+
     setMessages((prev) => [...prev, userMessage]);
     await saveMessage(conversationId, 'user', userMessage.content, userMessage.image_url);
     setInput('');
@@ -230,6 +243,48 @@ export default function Assistant() {
           description: 'Please log in again',
           variant: 'destructive',
         });
+        setLoading(false);
+        return;
+      }
+
+      // Check if we should generate an image instead of regular chat
+      if (isRequestingImage && isOfferToGenerateImage) {
+        // Generate outfit image
+        const imageResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            messages: messages.concat([userMessage]).map((m) => ({
+              role: m.role,
+              content: m.content,
+              image_url: m.image_url,
+            })),
+            conversationId,
+            generateImage: true,
+          }),
+        });
+
+        if (imageResponse.ok) {
+          const { imageUrl } = await imageResponse.json();
+          
+          const assistantMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: "Here's a visual representation of the suggested outfit:",
+            image_url: imageUrl,
+            timestamp: new Date(),
+          };
+
+          setMessages((prev) => [...prev, assistantMessage]);
+          await saveMessage(conversationId, 'assistant', assistantMessage.content, assistantMessage.image_url);
+          loadConversations();
+        } else {
+          throw new Error('Failed to generate image');
+        }
+        
         setLoading(false);
         return;
       }

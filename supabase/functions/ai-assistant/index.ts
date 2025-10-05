@@ -43,7 +43,7 @@ serve(async (req) => {
 
     console.log("Authenticated user:", user.id);
 
-    const { messages, conversationId, imageUrl } = await req.json();
+    const { messages, conversationId, imageUrl, generateImage } = await req.json();
 
     // Fetch user's closet items
     const { data: closetItems } = await supabaseClient
@@ -99,6 +99,7 @@ CAPABILITIES:
 3. Learn and remember user preferences over time
 4. Provide personalized style advice based on past interactions
 5. Recommend specific items from their closet with reasoning
+6. Generate visual representations of outfit suggestions using AI
 
 GUIDELINES:
 - Be conversational, friendly, and enthusiastic about fashion
@@ -108,7 +109,9 @@ GUIDELINES:
 - When suggesting outfits, explain WHY each piece works together
 - If their closet is empty, encourage them to add items first
 - Be honest but constructive with feedback
-- Consider their learned preferences in all recommendations`;
+- Consider their learned preferences in all recommendations
+- IMPORTANT: After providing outfit suggestions, always ask if they would like to see a visual representation of the outfit
+- When the user expresses interest in seeing the outfit visualization, provide a detailed description of the complete outfit including specific clothing items, colors, fabrics, and styling details`;
 
     // Prepare messages for AI
     const aiMessages = [
@@ -134,6 +137,34 @@ GUIDELINES:
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY not configured");
+    }
+
+    // If generateImage is true, use the image generation model
+    if (generateImage) {
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash-image-preview",
+          messages: aiMessages,
+          modalities: ["image", "text"],
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Image generation failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      
+      return new Response(
+        JSON.stringify({ imageUrl }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
