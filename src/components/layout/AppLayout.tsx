@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
-import { Camera, Shuffle, Shirt, Settings as SettingsIcon, House, Sparkles, User, LogOut, Menu, CreditCard, Save, TrendingUp, BarChart3, Lock } from "lucide-react";
+import { Camera, Shuffle, Shirt, Settings as SettingsIcon, House, Sparkles, User, LogOut, Menu, CreditCard, Save, ShoppingBag, BarChart3, Lock } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,7 +30,8 @@ const tabs: TabItem[] = [
   { to: "/mix", label: "Mix", icon: Shuffle },
   { to: "/closet", label: "Closet", icon: Shirt },
   { to: "/assistant", label: "AI Assistant", icon: Sparkles },
-  { to: "/trends", label: "Trends", icon: TrendingUp, premiumFeature: "seasonal-trends" },
+  { to: "/virtual-try-on", label: "Virtual Try-On", icon: Sparkles, premiumFeature: "virtual-try-on" },
+  { to: "/shopping", label: "Shopping", icon: ShoppingBag, premiumFeature: "shopping-assistant" },
   { to: "/analytics", label: "Analytics", icon: BarChart3, premiumFeature: "custom-analytics" },
   { to: "/snapshots", label: "Snapshots", icon: Save },
   { to: "/pricing", label: "Pricing", icon: CreditCard },

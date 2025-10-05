@@ -17,7 +17,8 @@ import Settings from "./pages/Settings";
 import Assistant from "./pages/Assistant";
 import Pricing from "./pages/Pricing";
 import Snapshots from "./pages/Snapshots";
-import Trends from "./pages/Trends";
+import VirtualTryOn from './pages/VirtualTryOn';
+import ShoppingAssistant from './pages/ShoppingAssistant';
 import Analytics from "./pages/Analytics";
 
 const queryClient = new QueryClient();
@@ -43,7 +44,8 @@ const App = () => (
               <Route path="/assistant" element={<Assistant />} />
                 <Route path="/pricing" element={<Pricing />} />
                 <Route path="/snapshots" element={<Snapshots />} />
-                <Route path="/trends" element={<Trends />} />
+                <Route path="/virtual-try-on" element={<VirtualTryOn />} />
+                <Route path="/shopping" element={<ShoppingAssistant />} />
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/settings" element={<Settings />} />
             </Route>

@@ -36,7 +36,7 @@ export const PLAN_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
       'Advanced style recommendations',
       'Unlimited closet storage',
       'Priority support',
-      'Seasonal trend reports'
+      'Virtual Try-On Studio'
     ]
   },
   pro: {
@@ -47,6 +47,7 @@ export const PLAN_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
       '500 outfit analyses per month',
       'Unlimited AI chat messages',
       'Personal AI stylist assistant',
+      'Smart Shopping Assistant',
       'Custom style analytics',
       'Priority support',
       '24/7 premium support',
@@ -60,7 +61,8 @@ export function hasFeatureAccess(feature: string, userPlan: SubscriptionPlan): b
   const userPlanIndex = planHierarchy.indexOf(userPlan);
 
   const featureRequirements: Record<string, number> = {
-    'seasonal-trends': 2, // premium+
+    'virtual-try-on': 2, // premium+
+    'shopping-assistant': 3, // pro only
     'custom-analytics': 3, // pro only
     'unlimited-chats': 3, // pro only
     'advanced-recommendations': 2, // premium+
