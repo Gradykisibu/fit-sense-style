@@ -89,11 +89,20 @@ export default function Closet() {
     try { await deleteClosetItem(id); toast({ title: 'Deleted' }); load(); } catch (e: any) { toast({ title: 'Failed to delete', description: e?.message }); }
   };
 
-  const addSampleData = () => {
+  const addSampleData = async () => {
     const sampleItems = generateSampleClosetData();
-    setMockCloset(sampleItems);
-    setItems(sampleItems);
-    toast({ title: 'Added 20 sample items', description: 'Your closet now has example data for testing.' });
+    
+    try {
+      // Insert all sample items into the database
+      for (const item of sampleItems) {
+        await addClosetItem(item);
+      }
+      
+      toast({ title: 'Added 20 sample items', description: 'Your closet now has example data for testing.' });
+      load(); // Reload from database
+    } catch (e: any) {
+      toast({ title: 'Failed to add sample data', description: e?.message, variant: 'destructive' });
+    }
   };
 
   return (
