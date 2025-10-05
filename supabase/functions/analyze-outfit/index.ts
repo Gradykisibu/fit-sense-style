@@ -56,6 +56,8 @@ serve(async (req) => {
       return btoa(binary);
     };
 
+    let imageContents: Array<{ type: string; image_url: { url: string } }> = [];
+
     if (contentType.includes('multipart/form-data')) {
       // Handle file upload
       const formData = await req.formData();
@@ -65,17 +67,31 @@ serve(async (req) => {
       }
       const arrayBuffer = await file.arrayBuffer();
       imageBase64 = arrayBufferToBase64(arrayBuffer);
+      imageContents = [{
+        type: 'image_url',
+        image_url: {
+          url: `data:image/jpeg;base64,${imageBase64}`
+        }
+      }];
     } else {
-      // Handle JSON with image URLs
+      // Handle JSON with image URLs (Mix & Match)
       const body = await req.json();
       items = body.items || [];
       if (items.length === 0) {
         throw new Error('No items provided');
       }
-      // For simplicity, analyze the first item's image
-      const response = await fetch(items[0].imageUrl);
-      const arrayBuffer = await response.arrayBuffer();
-      imageBase64 = arrayBufferToBase64(arrayBuffer);
+      // Fetch and encode ALL items for proper outfit analysis
+      for (const item of items) {
+        const response = await fetch(item.imageUrl);
+        const arrayBuffer = await response.arrayBuffer();
+        const base64 = arrayBufferToBase64(arrayBuffer);
+        imageContents.push({
+          type: 'image_url',
+          image_url: {
+            url: `data:image/jpeg;base64,${base64}`
+          }
+        });
+      }
     }
 
     // Call Lovable AI Gateway with Gemini 2.5 Flash
@@ -93,9 +109,9 @@ serve(async (req) => {
             content: [
               {
                 type: 'text',
-                text: `You are a friendly fashion expert who helps people look their best using simple, clear language that anyone can understand.
+                text: `You are a professional fashion stylist with years of experience who helps people look their best. You have a keen eye for detail and give honest, practical advice using clear language.
 
-**Your job:** Analyze this outfit carefully and give helpful, practical advice.
+**Your job:** Analyze ${imageContents.length > 1 ? 'these clothing items as a combined outfit' : 'this outfit'} carefully and give helpful, honest feedback. Be a REAL stylist - if items don't work together, say so clearly. Don't sugarcoat poor combinations.
 
 **What to provide:**
 1. An overall style score (0-100) - be honest but encouraging
@@ -155,12 +171,7 @@ Return ONLY valid JSON with this structure:
   "suggestedSwaps": [{"replaceItemId": string, "suggestion": string, "exampleItem": {"id": string, "category": string, "colorHex": string, "colorName": string}}]
 }`
               },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:image/jpeg;base64,${imageBase64}`
-                }
-              }
+              ...imageContents
             ]
           }
         ],
