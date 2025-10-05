@@ -13,8 +13,6 @@ import AppLayout from "./components/layout/AppLayout";
 import Check from "./pages/Check";
 import Mix from "./pages/Mix";
 import Closet from "./pages/Closet";
-import Suggestions from "./pages/Suggestions";
-import TryOn from "./pages/TryOn";
 import Settings from "./pages/Settings";
 import Assistant from "./pages/Assistant";
 import Pricing from "./pages/Pricing";
@@ -40,9 +38,7 @@ const App = () => (
               <Route path="/check" element={<Check />} />
               <Route path="/mix" element={<Mix />} />
               <Route path="/closet" element={<Closet />} />
-              <Route path="/suggestions" element={<Suggestions />} />
               <Route path="/assistant" element={<Assistant />} />
-              <Route path="/tryon" element={<TryOn />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/snapshots" element={<Snapshots />} />
               <Route path="/settings" element={<Settings />} />
