@@ -29,11 +29,12 @@ serve(async (req) => {
       }
     );
 
-    // Get the user from the JWT token
+    // Extract JWT from header and resolve user explicitly
+    const jwt = authHeader.replace("Bearer ", "");
     const {
       data: { user },
       error: userError,
-    } = await supabaseClient.auth.getUser();
+    } = await supabaseClient.auth.getUser(jwt);
 
     if (userError || !user) {
       console.error("Auth error:", userError);
