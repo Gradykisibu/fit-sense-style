@@ -67,11 +67,17 @@ export function SuggestionList({ items, imageType = 'swap' }: SuggestionListProp
         return;
       }
 
-      // Extract categories from suggestions
-      const suggestedCategories = items.map((s) => {
-        const match = s.suggestion.match(/Change the ([^:]+):/i);
-        return match ? match[1].toLowerCase().trim() : null;
-      }).filter(Boolean);
+      // Extract categories from suggestions by looking for clothing keywords
+      const clothingKeywords = ['blazer', 'jacket', 'coat', 'shirt', 'blouse', 't-shirt', 'top', 
+        'pants', 'trousers', 'jeans', 'chinos', 'shorts', 'skirt', 'dress',
+        'shoes', 'sneakers', 'boots', 'loafers', 'heels',
+        'belt', 'tie', 'scarf', 'hat', 'cap', 'socks',
+        'pocket square', 'accessory', 'bag', 'hoodie'];
+      
+      const suggestedCategories = items.flatMap((s) => {
+        const text = s.suggestion.toLowerCase();
+        return clothingKeywords.filter(keyword => text.includes(keyword));
+      });
 
       // Find matching items from closet
       const matches = closetItems.filter((item) => {
