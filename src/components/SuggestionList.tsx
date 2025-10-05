@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { getCloset } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
+import { saveSnapshot } from '@/lib/settings';
 
 interface SuggestionListProps {
   items: { replaceItemId: string; suggestion: string }[];
@@ -169,8 +170,20 @@ export function SuggestionList({ items, imageType = 'swap' }: SuggestionListProp
             alt="Suggested items to swap"
             className="w-full h-auto"
           />
-          <div className="p-3 text-sm text-muted-foreground text-center">
-            Items you should consider swapping
+          <div className="p-3 space-y-2">
+            <p className="text-sm text-muted-foreground text-center">
+              Items you should consider swapping
+            </p>
+            <Button
+              variant="secondary"
+              className="w-full"
+              onClick={() => {
+                saveSnapshot({ type: 'suggestion', preview: generatedImage, result: { suggestions: items } });
+                toast({ title: 'Snapshot saved' });
+              }}
+            >
+              Save Snapshot
+            </Button>
           </div>
         </div>
       )}
