@@ -67,25 +67,56 @@ export function SuggestionList({ items, imageType = 'swap' }: SuggestionListProp
         return;
       }
 
-      // Extract categories from suggestions by looking for clothing keywords
+      // Extract categories and color preferences from suggestions
       const clothingKeywords = ['blazer', 'jacket', 'coat', 'shirt', 'blouse', 't-shirt', 'top', 
         'pants', 'trousers', 'jeans', 'chinos', 'shorts', 'skirt', 'dress',
         'shoes', 'sneakers', 'boots', 'loafers', 'heels',
         'belt', 'tie', 'scarf', 'hat', 'cap', 'socks',
         'pocket square', 'accessory', 'bag', 'hoodie'];
       
-      const suggestedCategories = items.flatMap((s) => {
+      const colorKeywords = ['dark', 'light', 'navy', 'black', 'white', 'gray', 'grey', 
+        'brown', 'blue', 'green', 'red', 'clean', 'polished'];
+      
+      // Extract categories and colors from suggestions
+      const suggestionData = items.map((s) => {
         const text = s.suggestion.toLowerCase();
-        return clothingKeywords.filter(keyword => text.includes(keyword));
+        const categories = clothingKeywords.filter(keyword => text.includes(keyword));
+        const colors = colorKeywords.filter(keyword => text.includes(keyword));
+        return { text, categories, colors };
       });
 
-      // Find matching items from closet
-      const matches = closetItems.filter((item) => {
+      // Score and rank matching items
+      const scoredItems = closetItems.map((item) => {
         const itemCategory = item.category.toLowerCase();
-        return suggestedCategories.some((cat) => 
-          itemCategory.includes(cat as string) || (cat as string).includes(itemCategory)
-        );
+        const itemColor = (item.colorName || item.colorHex || '').toLowerCase();
+        let score = 0;
+
+        // Check category match
+        suggestionData.forEach(({ categories, colors }) => {
+          const categoryMatch = categories.some((cat) => 
+            itemCategory.includes(cat) || cat.includes(itemCategory)
+          );
+          if (categoryMatch) {
+            score += 10; // Base score for category match
+            
+            // Bonus for color match
+            colors.forEach((color) => {
+              if (itemColor.includes(color)) {
+                score += 5;
+              }
+            });
+          }
+        });
+
+        return { item, score };
       });
+
+      // Filter and sort by score, take top 3
+      const matches = scoredItems
+        .filter(({ score }) => score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3)
+        .map(({ item }) => item);
 
       if (matches.length === 0) {
         toast({
