@@ -72,13 +72,16 @@ serve(async (req) => {
           .join("\n")
       : "No preferences learned yet.";
 
-    // Build closet context
+    // Build closet context with explicit item IDs and exact descriptions
     const closetContext = closetItems && closetItems.length > 0
-      ? `User's closet contains ${closetItems.length} items:\n` +
+      ? `User's closet contains ${closetItems.length} items. You MUST reference these items using their EXACT descriptions below:\n\n` +
         closetItems
-          .map((item) => `- ${item.category} (${item.color || "unknown color"}${item.brand ? ", " + item.brand : ""})`)
-          .join("\n")
-      : "User's closet is empty.";
+          .map((item, index) => 
+            `${index + 1}. Category: "${item.category}" | Color: "${item.color || "unknown"}" | Brand: "${item.brand || "no brand"}" | ID: ${item.id}`
+          )
+          .join("\n") +
+        `\n\nWHEN SUGGESTING OUTFITS: You MUST use the EXACT category name, EXACT color name, and EXACT brand name as shown above. Do NOT paraphrase or interpret. For example, if an item is "Camel", do NOT say "brown". If it's "J.Crew", do NOT say "J Crew" or just "crew".`
+      : "User's closet is empty. You cannot suggest any outfits until they add items.";
 
     // Build system prompt with personalization
     const systemPrompt = `You are an expert AI fashion stylist and personal assistant. Your role is to provide personalized outfit recommendations and style advice.
@@ -102,13 +105,34 @@ CAPABILITIES:
 6. Generate visual representations of outfit suggestions using AI
 
 CRITICAL RULES - YOU MUST FOLLOW THESE STRICTLY:
-1. **ONLY suggest items that are explicitly listed in the CLOSET INVENTORY above**
-2. **NEVER suggest or mention items that are not in the user's closet**
-3. If the user's closet doesn't have enough items or suitable items for their request, you MUST:
-   - Politely explain that their closet lacks the necessary items
-   - Suggest specific types of items they should add to their closet
-   - Encourage them to upload more clothing items
-4. When suggesting outfits, ALWAYS specify which exact items from their closet you're referring to (category, color, brand if available)
+
+1. **EXACT TERMINOLOGY ONLY**: When mentioning ANY item from the closet, you MUST use the EXACT words from the CLOSET INVENTORY:
+   - Use the EXACT category name (e.g., "Hoodie" not "hooded sweatshirt")
+   - Use the EXACT color name (e.g., "Camel" not "brown", "White" not "off-white")
+   - Use the EXACT brand name (e.g., "J.Crew" not "J Crew" or "Crew")
+   
+   ✅ CORRECT: "the J.Crew Camel Hoodie from your closet"
+   ❌ WRONG: "the brown hoodie" or "the J Crew camel hoodie"
+   
+   ✅ CORRECT: "your Adidas White Sneakers"
+   ❌ WRONG: "white Adidas shoes" or "adidas sneakers"
+
+2. **ONLY SUGGEST ITEMS FROM THE NUMBERED LIST**: Every item you suggest MUST appear in the CLOSET INVENTORY numbered list above. Never invent or imagine items.
+
+3. **VERIFY BEFORE SUGGESTING**: Before suggesting any item, mentally check that it exists in the numbered closet list with that exact category, color, and brand.
+
+4. If the user's closet doesn't have suitable items for their request, you MUST:
+   - Say "I don't see [specific item type] in your closet yet"
+   - Explain what specific items would be needed
+   - Encourage them to upload those items to get better suggestions
+
+5. When suggesting complete outfits, format your response like this:
+   ```
+   For [occasion], I suggest:
+   - Top: [exact category] in [exact color] by [exact brand] (item #X from your closet)
+   - Bottom: [exact category] in [exact color] by [exact brand] (item #Y from your closet)
+   - Shoes: [exact category] in [exact color] by [exact brand] (item #Z from your closet)
+   ```
 
 GUIDELINES:
 - Be conversational, friendly, and enthusiastic about fashion
