@@ -141,7 +141,22 @@ GUIDELINES:
 
     // If generateImage is true, use the image generation model
     if (generateImage) {
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      console.log("Generating outfit image...");
+      
+      // Extract outfit details from the last assistant message to create a detailed prompt
+      const lastMessage = messages[messages.length - 2]; // Second to last (before "Yes")
+      const outfitDescription = lastMessage?.content || "";
+      
+      // Create a detailed image generation prompt
+      const imagePrompt = `Generate a high-quality, realistic fashion photography style image showing a complete outfit laid out on a clean white background. The outfit consists of:
+
+${outfitDescription}
+
+Style: Professional product photography, well-lit, sharp focus, centered composition. Show the clothing items arranged as if ready to wear - shirt/top at the top, pants/bottoms below, shoes at the bottom. Make it look like a fashion catalog or Instagram flat lay photo.`;
+
+      console.log("Image generation prompt:", imagePrompt);
+
+      const imageGenResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -149,17 +164,33 @@ GUIDELINES:
         },
         body: JSON.stringify({
           model: "google/gemini-2.5-flash-image-preview",
-          messages: aiMessages,
+          messages: [
+            {
+              role: "user",
+              content: imagePrompt
+            }
+          ],
           modalities: ["image", "text"],
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Image generation failed: ${response.status}`);
+      if (!imageGenResponse.ok) {
+        const errorText = await imageGenResponse.text();
+        console.error("Image generation failed:", imageGenResponse.status, errorText);
+        throw new Error(`Image generation failed: ${imageGenResponse.status}`);
       }
 
-      const data = await response.json();
+      const data = await imageGenResponse.json();
+      console.log("Image generation response received");
+      
       const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      
+      if (!imageUrl) {
+        console.error("No image URL in response:", JSON.stringify(data));
+        throw new Error("No image generated");
+      }
+      
+      console.log("Image URL extracted successfully");
       
       return new Response(
         JSON.stringify({ imageUrl }),
