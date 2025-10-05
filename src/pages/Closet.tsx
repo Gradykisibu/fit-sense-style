@@ -5,10 +5,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClosetItemCard } from '@/components/ClosetItemCard';
 import { addClosetItem, deleteClosetItem, getCloset } from '@/lib/api';
 import { ClothingItem, generateSampleClosetData, setMockCloset } from '@/lib/settings';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { Upload } from 'lucide-react';
 
 const CATEGORIES: ClothingItem['category'][] = ['hat','t-shirt','shirt','hoodie','jacket','dress','skirt','pants','shorts','socks','shoes','belt','bag','accessory'];
 
@@ -17,6 +20,8 @@ export default function Closet() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<{imageUrl?: string; category?: ClothingItem['category']; colorHex?: string; brand?: string}>({});
+  const [uploading, setUploading] = useState(false);
+  const [uploadTab, setUploadTab] = useState<'url' | 'file'>('url');
   const { toast } = useToast();
 
   const load = async () => {
@@ -27,10 +32,57 @@ export default function Closet() {
 
   useEffect(() => { load(); }, []);
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Invalid file', description: 'Please upload an image file', variant: 'destructive' });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('closet-items')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('closet-items')
+        .getPublicUrl(filePath);
+
+      setForm(f => ({ ...f, imageUrl: publicUrl }));
+      toast({ title: 'Image uploaded successfully' });
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast({ title: 'Upload failed', description: error.message, variant: 'destructive' });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const onAdd = async () => {
-    if (!form.category) return;
+    if (!form.category || !form.imageUrl) {
+      toast({ title: 'Missing fields', description: 'Please provide an image and category', variant: 'destructive' });
+      return;
+    }
     const item: ClothingItem = { id: `closet_${Date.now()}`, category: form.category, colorHex: form.colorHex, brand: form.brand, imageUrl: form.imageUrl } as any;
-    try { await addClosetItem(item); toast({ title: 'Item added' }); setOpen(false); setForm({}); load(); } catch (e: any) { toast({ title: 'Failed to add', description: e?.message }); }
+    try { 
+      await addClosetItem(item); 
+      toast({ title: 'Item added' }); 
+      setOpen(false); 
+      setForm({}); 
+      setUploadTab('url');
+      load(); 
+    } catch (e: any) { 
+      toast({ title: 'Failed to add', description: e?.message, variant: 'destructive' }); 
+    }
   };
 
   const onDelete = async (id: string) => {
@@ -59,10 +111,37 @@ export default function Closet() {
               <DialogTitle>Add Closet Item</DialogTitle>
             </DialogHeader>
             <div className="grid gap-3">
-              <div className="grid gap-2">
-                <Label>Image URL</Label>
-                <Input placeholder="https://..." value={form.imageUrl || ''} onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))} />
-              </div>
+              <Tabs value={uploadTab} onValueChange={(v) => setUploadTab(v as 'url' | 'file')}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="url">Image URL</TabsTrigger>
+                  <TabsTrigger value="file">Upload File</TabsTrigger>
+                </TabsList>
+                <TabsContent value="url" className="space-y-2">
+                  <Label>Image URL</Label>
+                  <Input 
+                    placeholder="https://..." 
+                    value={form.imageUrl || ''} 
+                    onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))} 
+                  />
+                </TabsContent>
+                <TabsContent value="file" className="space-y-2">
+                  <Label>Upload Image</Label>
+                  <div className="flex flex-col gap-2">
+                    <Input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      disabled={uploading}
+                    />
+                    {uploading && <p className="text-sm text-muted-foreground">Uploading...</p>}
+                    {form.imageUrl && uploadTab === 'file' && (
+                      <div className="relative w-full h-32 border rounded-md overflow-hidden">
+                        <img src={form.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+              </Tabs>
               <div className="grid gap-2">
                 <Label>Category</Label>
                 <Select value={form.category} onValueChange={(v) => setForm((f) => ({ ...f, category: v as any }))}>
@@ -81,8 +160,8 @@ export default function Closet() {
                 <Input placeholder="Nike" value={form.brand || ''} onChange={(e) => setForm((f) => ({ ...f, brand: e.target.value }))} />
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <Button variant="secondary" onClick={() => setOpen(false)}>Cancel</Button>
-                <Button onClick={onAdd}>Add</Button>
+                <Button variant="secondary" onClick={() => { setOpen(false); setForm({}); setUploadTab('url'); }}>Cancel</Button>
+                <Button onClick={onAdd} disabled={uploading || !form.imageUrl}>Add</Button>
               </div>
             </div>
             </DialogContent>
