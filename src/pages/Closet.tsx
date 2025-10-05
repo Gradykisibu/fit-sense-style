@@ -183,7 +183,7 @@ export default function Closet() {
       ) : items.length === 0 ? (
         <Card>
           <CardHeader><CardTitle>Empty closet</CardTitle></CardHeader>
-          <CardContent className="text-muted-foreground">Add items to start getting personalized suggestions.</CardContent>
+          <CardContent className="text-muted-foreground">Add items to organize your wardrobe digitally.</CardContent>
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

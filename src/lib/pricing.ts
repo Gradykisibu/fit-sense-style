@@ -37,45 +37,43 @@ export const basePlans: PricingPlan[] = [
     description: "Perfect for getting started with AI fashion advice",
     features: [
       "50 outfit analyses per month",
+      "50 AI chat messages per month",
       "Basic style feedback",
       "Limited closet storage (25 items)",
-      "Standard support",
-      "Mobile app access"
+      "Standard support"
     ],
     buttonText: "Get Started",
     popular: false
   },
   {
     name: "Premium",
-    basePrice: 19,
+    basePrice: 24,
     period: "/month",
     description: "Most popular choice for fashion enthusiasts",
     features: [
-      "Unlimited outfit analyses",
+      "200 outfit analyses per month",
+      "200 AI chat messages per month",
       "Advanced style recommendations",
       "Unlimited closet storage",
-      "Mix & match suggestions",
       "Priority support",
-      "Seasonal trend reports",
-      "Virtual try-on (10 per month)"
+      "Seasonal trend reports"
     ],
     buttonText: "Go Premium",
     popular: true
   },
   {
     name: "Pro",
-    basePrice: 39,
+    basePrice: 49,
     period: "/month",
     description: "Complete solution for style professionals and influencers",
     features: [
-      "Everything in Premium",
-      "Unlimited virtual try-ons",
+      "500 outfit analyses per month",
+      "Unlimited AI chat messages",
       "Personal AI stylist assistant",
-      "Brand partnership opportunities",
       "Custom style analytics",
-      "White-label solutions",
+      "Priority support",
       "24/7 premium support",
-      "API access for integrations"
+      "Early access to new features"
     ],
     buttonText: "Go Pro",
     popular: false

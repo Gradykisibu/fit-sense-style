@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { analyzeItems } from '@/lib/api';
 import { ScoreBadge } from '@/components/ScoreBadge';
-import { SuggestionList } from '@/components/SuggestionList';
 import { Stepper } from '@/components/Stepper';
 import { useToast } from '@/hooks/use-toast';
 
@@ -87,10 +86,20 @@ export default function Mix() {
               </ul>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader><CardTitle>Suggested Swaps</CardTitle></CardHeader>
-            <CardContent><SuggestionList items={result.suggestedSwaps || []} /></CardContent>
-          </Card>
+          {result.suggestedSwaps && result.suggestedSwaps.length > 0 && (
+            <Card>
+              <CardHeader><CardTitle>Suggested Swaps</CardTitle></CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {result.suggestedSwaps.map((swap: any, idx: number) => (
+                    <li key={idx} className="text-sm">
+                      {swap.suggestion || swap}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
     </main>

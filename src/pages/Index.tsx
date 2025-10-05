@@ -33,11 +33,9 @@ const Index = () => {
               <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
                 <Link to="/closet" className="underline underline-offset-4 hover:text-foreground transition-colors">My Closet</Link>
                 <span className="hidden sm:inline">·</span>
-                <Link to="/suggestions" className="underline underline-offset-4 hover:text-foreground transition-colors">Suggestions</Link>
-                <span className="hidden sm:inline">·</span>
-                <Link to="/tryon" className="underline underline-offset-4 hover:text-foreground transition-colors">Try‑On</Link>
-                <span className="hidden sm:inline">·</span>
                 <Link to="/snapshots" className="underline underline-offset-4 hover:text-foreground transition-colors">Snapshots</Link>
+                <span className="hidden sm:inline">·</span>
+                <Link to="/assistant" className="underline underline-offset-4 hover:text-foreground transition-colors">AI Assistant</Link>
                 <span className="hidden sm:inline">·</span>
                 <Link to="/settings" className="underline underline-offset-4 hover:text-foreground transition-colors">Settings</Link>
               </div>
@@ -58,18 +56,18 @@ const Index = () => {
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Shirt className="h-5 w-5" /> Closet & Suggestions
+              <Shirt className="h-5 w-5" /> Digital Closet
             </CardTitle>
           </CardHeader>
-          <CardContent className="text-muted-foreground">Save items, filter by color/category, and get occasion‑ready outfits.</CardContent>
+          <CardContent className="text-muted-foreground">Save items, organize your wardrobe, and get AI-powered style advice.</CardContent>
         </Card>
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Wand2 className="h-5 w-5" /> Optional Try‑On
+              <Wand2 className="h-5 w-5" /> AI Assistant
             </CardTitle>
           </CardHeader>
-          <CardContent className="text-muted-foreground">When available, preview swaps and suggestions side‑by‑side.</CardContent>
+          <CardContent className="text-muted-foreground">Chat with your personal AI stylist for fashion advice and tips.</CardContent>
         </Card>
       </section>
 
@@ -79,7 +77,7 @@ const Index = () => {
           <div className="flex items-center gap-2"><Box className="h-4 w-4" /> Detect items & colors</div>
           <div className="flex items-center gap-2"><Sparkles className="h-4 w-4" /> AI verdict + swaps</div>
           <div className="flex items-center gap-2"><Shuffle className="h-4 w-4" /> Mix & match compatibility</div>
-          <div className="flex items-center gap-2"><Shirt className="h-4 w-4" /> Closet suggestions</div>
+          <div className="flex items-center gap-2"><Shirt className="h-4 w-4" /> Digital closet</div>
           <div className="flex items-center gap-2"><SettingsIcon className="h-4 w-4" /> Live/Mock via Settings</div>
         </div>
       </section>

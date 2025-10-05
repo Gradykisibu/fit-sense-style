@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { analyzeOutfitImage } from '@/lib/api';
 import { ScoreBadge } from '@/components/ScoreBadge';
 import { DetectedItemsList } from '@/components/DetectedItemsList';
-import { SuggestionList } from '@/components/SuggestionList';
 import { Stepper } from '@/components/Stepper';
 import { useToast } from '@/hooks/use-toast';
 import { saveSnapshot } from '@/lib/settings';
@@ -101,10 +100,20 @@ export default function Check() {
                   </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardHeader><CardTitle>Suggested Swaps</CardTitle></CardHeader>
-                <CardContent><SuggestionList items={result.suggestedSwaps || []} imageType="full" /></CardContent>
-              </Card>
+              {result.suggestedSwaps && result.suggestedSwaps.length > 0 && (
+                <Card>
+                  <CardHeader><CardTitle>Suggested Swaps</CardTitle></CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {result.suggestedSwaps.map((swap: any, idx: number) => (
+                        <li key={idx} className="text-sm">
+                          {swap.suggestion || swap}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
             </>
           )}
         </div>
