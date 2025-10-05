@@ -91,7 +91,7 @@ export default function Check() {
               </Card>
               <Card>
                 <CardHeader><CardTitle>Suggested Swaps</CardTitle></CardHeader>
-                <CardContent><SuggestionList items={result.suggestedSwaps || []} /></CardContent>
+                <CardContent><SuggestionList items={result.suggestedSwaps || []} imageType="full" /></CardContent>
               </Card>
             </>
           )}

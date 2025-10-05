@@ -6,7 +6,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { getCloset } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 
-export function SuggestionList({ items }: { items: { replaceItemId: string; suggestion: string }[] }) {
+interface SuggestionListProps {
+  items: { replaceItemId: string; suggestion: string }[];
+  imageType?: 'swap' | 'full'; // swap = show only items to swap, full = show complete outfit
+}
+
+export function SuggestionList({ items, imageType = 'swap' }: SuggestionListProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isLoadingCloset, setIsLoadingCloset] = useState(false);
@@ -21,7 +26,7 @@ export function SuggestionList({ items }: { items: { replaceItemId: string; sugg
       const suggestions = items.map((s) => s.suggestion);
       
       const { data, error } = await supabase.functions.invoke('generate-outfit-image', {
-        body: { suggestions },
+        body: { suggestions, type: imageType },
       });
 
       if (error) throw error;

@@ -11,28 +11,38 @@ serve(async (req) => {
   }
 
   try {
-    const { suggestions } = await req.json();
+    const { suggestions, type = 'swap' } = await req.json();
     
     if (!suggestions || !Array.isArray(suggestions)) {
       throw new Error('Suggestions array is required');
     }
 
-    // Build a descriptive prompt showing only the items to swap
-    const itemsToSwap = suggestions
-      .map((s: string) => {
-        const cleanSuggestion = s.replace(/\*\*/g, '');
-        // Extract the item category from suggestions like "Change the blazer: ..."
-        const match = cleanSuggestion.match(/Change the ([^:]+):/i);
-        if (match) {
-          const category = match[1];
-          const description = cleanSuggestion.split(':')[1]?.trim() || cleanSuggestion;
-          return `${category}: ${description}`;
-        }
-        return cleanSuggestion;
-      })
-      .join('. ');
+    console.log('Generating outfit image with type:', type);
+
+    let prompt: string;
     
-    const prompt = `Product photography showing individual clothing items laid out on a clean white background. Items to display: ${itemsToSwap}. Each item should be clearly visible, well-lit, professional fashion photography style, high quality, catalog style presentation.`;
+    if (type === 'full') {
+      // For outfit check - generate full body outfit visualization
+      const outfitDescription = suggestions.join('. ');
+      prompt = `Generate a professional fashion photograph showing a complete outfit on a mannequin or model against a clean background. The outfit consists of: ${outfitDescription}. Show the full body, well-coordinated, high-quality fashion photography style, professional lighting.`;
+    } else {
+      // For mix & match - show only the items to swap
+      const itemsToSwap = suggestions
+        .map((s: string) => {
+          const cleanSuggestion = s.replace(/\*\*/g, '');
+          // Extract the item category from suggestions like "Change the blazer: ..."
+          const match = cleanSuggestion.match(/Change the ([^:]+):/i);
+          if (match) {
+            const category = match[1];
+            const description = cleanSuggestion.split(':')[1]?.trim() || cleanSuggestion;
+            return `${category}: ${description}`;
+          }
+          return cleanSuggestion;
+        })
+        .join('. ');
+      
+      prompt = `Product photography showing individual clothing items laid out on a clean white background. Items to display: ${itemsToSwap}. Each item should be clearly visible, well-lit, professional fashion photography style, high quality, catalog style presentation.`;
+    }
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
