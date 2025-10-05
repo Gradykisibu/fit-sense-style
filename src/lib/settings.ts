@@ -134,26 +134,37 @@ export function generateSampleClosetData(): ClothingItem[] {
   const generateUUID = () => crypto.randomUUID();
   
   return [
+    // Blazers (multiple options for testing)
     { id: generateUUID(), category: 'jacket', colorHex: '#1a1a2e', colorName: 'Navy', brand: 'Hugo Boss', imageUrl: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400' },
     { id: generateUUID(), category: 'jacket', colorHex: '#2c2c2c', colorName: 'Charcoal', brand: 'Zara', imageUrl: 'https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=400' },
+    { id: generateUUID(), category: 'jacket', colorHex: '#4a4a4a', colorName: 'Gray', brand: 'The North Face', imageUrl: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400' },
+    { id: generateUUID(), category: 'jacket', colorHex: '#1a1a2e', colorName: 'Navy', brand: 'Patagonia', imageUrl: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400' },
+    { id: generateUUID(), category: 'jacket', colorHex: '#654321', colorName: 'Brown', brand: 'Massimo Dutti', imageUrl: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400' },
+    
+    // Shirts & Tops
+    { id: generateUUID(), category: 'shirt', colorHex: '#ffffff', colorName: 'White', brand: 'Brooks Brothers', imageUrl: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400' },
+    { id: generateUUID(), category: 'shirt', colorHex: '#4169e1', colorName: 'Blue', brand: 'Ralph Lauren', imageUrl: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400' },
     { id: generateUUID(), category: 't-shirt', colorHex: '#ffffff', colorName: 'White', brand: 'Uniqlo', imageUrl: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400' },
     { id: generateUUID(), category: 't-shirt', colorHex: '#000000', colorName: 'Black', brand: 'H&M', imageUrl: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=400' },
     { id: generateUUID(), category: 't-shirt', colorHex: '#e8e8e8', colorName: 'Light Gray', brand: 'Gap', imageUrl: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=400' },
+    
+    // Pants & Bottoms
     { id: generateUUID(), category: 'pants', colorHex: '#1c3a52', colorName: 'Navy Blue', brand: 'Dockers', imageUrl: 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400' },
     { id: generateUUID(), category: 'pants', colorHex: '#4a4a4a', colorName: 'Dark Gray', brand: 'Levi\'s', imageUrl: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=400' },
     { id: generateUUID(), category: 'pants', colorHex: '#2b4c3f', colorName: 'Forest Green', brand: 'Banana Republic', imageUrl: 'https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=400' },
+    { id: generateUUID(), category: 'pants', colorHex: '#1c3a52', colorName: 'Dark Denim', brand: 'Levi\'s 501', imageUrl: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400' },
+    
+    // Shoes
     { id: generateUUID(), category: 'shoes', colorHex: '#3b2621', colorName: 'Brown Leather', brand: 'Clarks', imageUrl: 'https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=400' },
     { id: generateUUID(), category: 'shoes', colorHex: '#000000', colorName: 'Black', brand: 'Nike', imageUrl: 'https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=400' },
     { id: generateUUID(), category: 'shoes', colorHex: '#ffffff', colorName: 'White Sneakers', brand: 'Adidas', imageUrl: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400' },
-    { id: generateUUID(), category: 'dress', colorHex: '#000000', colorName: 'Black', brand: 'Zara', imageUrl: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400' },
-    { id: generateUUID(), category: 'dress', colorHex: '#c41e3a', colorName: 'Red', brand: 'Mango', imageUrl: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=400' },
-    { id: generateUUID(), category: 'jacket', colorHex: '#4a4a4a', colorName: 'Gray', brand: 'The North Face', imageUrl: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400' },
-    { id: generateUUID(), category: 'jacket', colorHex: '#1a1a2e', colorName: 'Navy', brand: 'Patagonia', imageUrl: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400' },
+    
+    // Hoodies
     { id: generateUUID(), category: 'hoodie', colorHex: '#8b4513', colorName: 'Camel', brand: 'J.Crew', imageUrl: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400' },
     { id: generateUUID(), category: 'hoodie', colorHex: '#2c5f7c', colorName: 'Teal', brand: 'COS', imageUrl: 'https://images.unsplash.com/photo-1583743089695-4b816a340f82?w=400' },
-    { id: generateUUID(), category: 'shirt', colorHex: '#ffffff', colorName: 'White', brand: 'Brooks Brothers', imageUrl: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400' },
-    { id: generateUUID(), category: 'shirt', colorHex: '#4169e1', colorName: 'Blue', brand: 'Ralph Lauren', imageUrl: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400' },
-    { id: generateUUID(), category: 'pants', colorHex: '#1c3a52', colorName: 'Dark Denim', brand: 'Levi\'s 501', imageUrl: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400' },
+    
+    // Accessories
+    { id: generateUUID(), category: 'belt', colorHex: '#654321', colorName: 'Brown Leather', brand: 'Timberland', imageUrl: 'https://images.unsplash.com/photo-1624222247344-70e7e4c6c987?w=400' },
   ];
 }
 
