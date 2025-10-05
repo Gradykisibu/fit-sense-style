@@ -215,19 +215,23 @@ export default function Assistant() {
       timestamp: new Date(),
     };
 
-    // Check if user is requesting outfit image generation
-    const isRequestingImage = input.toLowerCase().includes('yes') || 
-                               input.toLowerCase().includes('show') ||
-                               input.toLowerCase().includes('see') ||
-                               input.toLowerCase().includes('generate');
-    const lastAssistantMessage = messages.length > 0 && messages[messages.length - 1].role === 'assistant' 
-      ? messages[messages.length - 1].content 
-      : '';
-    const isOfferToGenerateImage = lastAssistantMessage.toLowerCase().includes('would you like') && 
-                                    (lastAssistantMessage.toLowerCase().includes('visual') || 
-                                     lastAssistantMessage.toLowerCase().includes('image') ||
-                                     lastAssistantMessage.toLowerCase().includes('see'));
+    // Detect if user is requesting an outfit image
+    const inputLc = input.toLowerCase();
+    const isExplicitVisualRequest =
+      /visual|image|picture|photo|render|flat lay/.test(inputLc) ||
+      /(show|see|send|display).*(visual|image|picture|photo|outfit)/.test(inputLc);
+    const isAffirmative = /(yes|sure|yeah|yep|please do|ok|okay)/.test(inputLc);
 
+    const lastAssistantMessage = messages.length > 0 && messages[messages.length - 1].role === 'assistant' 
+      ? messages[messages.length - 1].content.toLowerCase()
+      : '';
+
+    const isOfferToGenerateImage = lastAssistantMessage.includes('would you like') && 
+                                    (lastAssistantMessage.includes('visual') || 
+                                     lastAssistantMessage.includes('image') ||
+                                     lastAssistantMessage.includes('see'));
+
+    const shouldGenerateImage = isExplicitVisualRequest || (isAffirmative && isOfferToGenerateImage);
     setMessages((prev) => [...prev, userMessage]);
     await saveMessage(conversationId, 'user', userMessage.content, userMessage.image_url);
     setInput('');
@@ -248,7 +252,7 @@ export default function Assistant() {
       }
 
       // Check if we should generate an image instead of regular chat
-      if (isRequestingImage && isOfferToGenerateImage) {
+      if (shouldGenerateImage) {
         // Generate outfit image
         const imageResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant`, {
           method: 'POST',
