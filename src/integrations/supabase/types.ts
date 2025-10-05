@@ -90,6 +90,7 @@ export type Database = {
           conversation_id: string
           created_at: string
           id: string
+          image_url: string | null
           role: string
           user_id: string
         }
@@ -98,6 +99,7 @@ export type Database = {
           conversation_id: string
           created_at?: string
           id?: string
+          image_url?: string | null
           role: string
           user_id: string
         }
@@ -106,6 +108,7 @@ export type Database = {
           conversation_id?: string
           created_at?: string
           id?: string
+          image_url?: string | null
           role?: string
           user_id?: string
         }
@@ -272,6 +275,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_preferences: {
+        Row: {
+          confidence_score: number | null
+          created_at: string
+          id: string
+          last_observed_at: string
+          preference_key: string
+          preference_type: string
+          preference_value: string
+          times_observed: number | null
+          user_id: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          last_observed_at?: string
+          preference_key: string
+          preference_type: string
+          preference_value: string
+          times_observed?: number | null
+          user_id: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          last_observed_at?: string
+          preference_key?: string
+          preference_type?: string
+          preference_value?: string
+          times_observed?: number | null
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

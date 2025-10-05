@@ -1,235 +1,450 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect, useRef } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { getCloset, getSuggestions, createTryOnJob } from '@/lib/api';
 import { useDocumentTitle } from '@/lib/useDocumentTitle';
-import { Bot, User, Sparkles, Send } from 'lucide-react';
+import { Bot, User, Sparkles, Send, Image as ImageIcon, Plus, History, X } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 interface Message {
   id: string;
-  type: 'user' | 'assistant';
+  role: 'user' | 'assistant';
   content: string;
-  outfits?: any[];
+  image_url?: string;
   timestamp: Date;
+}
+
+interface Conversation {
+  id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export default function Assistant() {
   useDocumentTitle('AI Style Assistant');
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 'welcome',
-      type: 'assistant',
-      content: "Hi! I'm your AI style assistant. Tell me about an upcoming occasion and I'll help you find the perfect outfit from your closet. For example: \"I'm going to a wedding next weekend\" or \"I have a job interview tomorrow\".",
-      timestamp: new Date()
-    }
-  ]);
+  const { user } = useAuth();
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const { toast } = useToast();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const extractOccasion = (text: string): string => {
-    const lowerText = text.toLowerCase();
-    if (lowerText.includes('wedding')) return 'formal';
-    if (lowerText.includes('interview') || lowerText.includes('business') || lowerText.includes('meeting')) return 'business';
-    if (lowerText.includes('date') || lowerText.includes('dinner')) return 'date';
-    if (lowerText.includes('funeral')) return 'formal';
-    if (lowerText.includes('party') || lowerText.includes('celebration')) return 'party';
-    if (lowerText.includes('casual') || lowerText.includes('everyday')) return 'casual';
-    if (lowerText.includes('smart casual') || lowerText.includes('brunch')) return 'smart_casual';
-    
-    // Default to smart_casual for professional/semi-formal occasions
-    return 'smart_casual';
+  // Load conversations on mount
+  useEffect(() => {
+    loadConversations();
+  }, []);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const loadConversations = async () => {
+    const { data, error } = await supabase
+      .from('conversations')
+      .select('*')
+      .order('updated_at', { ascending: false });
+
+    if (!error && data) {
+      setConversations(data);
+    }
   };
 
-  const extractPalette = (text: string): string | undefined => {
-    const lowerText = text.toLowerCase();
-    if (lowerText.includes('neutral') || lowerText.includes('beige') || lowerText.includes('navy')) return 'neutral';
-    if (lowerText.includes('warm') || lowerText.includes('red') || lowerText.includes('orange')) return 'warm';
-    if (lowerText.includes('cool') || lowerText.includes('blue') || lowerText.includes('green')) return 'cool';
-    if (lowerText.includes('black') || lowerText.includes('white') || lowerText.includes('grey')) return 'monochrome';
-    return undefined;
+  const loadConversation = async (conversationId: string) => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: true });
+
+    if (!error && data) {
+      setMessages(
+        data.map((msg) => ({
+          id: msg.id,
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+          image_url: msg.image_url,
+          timestamp: new Date(msg.created_at),
+        }))
+      );
+      setCurrentConversationId(conversationId);
+    }
+    setLoading(false);
+  };
+
+  const createNewConversation = async () => {
+    const { data, error } = await supabase
+      .from('conversations')
+      .insert({
+        user_id: user?.id,
+        title: 'New Conversation',
+      })
+      .select()
+      .single();
+
+    if (!error && data) {
+      setCurrentConversationId(data.id);
+      setMessages([]);
+      loadConversations();
+      return data.id;
+    }
+    return null;
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: 'File too large',
+        description: 'Please select an image under 10MB',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setUploadingImage(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user?.id}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('closet-items')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from('closet-items').getPublicUrl(fileName);
+
+      setSelectedImage(publicUrl);
+      toast({
+        title: 'Image uploaded',
+        description: 'Image ready to analyze',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Upload failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const saveMessage = async (conversationId: string, role: 'user' | 'assistant', content: string, imageUrl?: string) => {
+    await supabase.from('messages').insert({
+      conversation_id: conversationId,
+      user_id: user?.id,
+      role,
+      content,
+      image_url: imageUrl,
+    });
+
+    // Update conversation timestamp
+    await supabase
+      .from('conversations')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', conversationId);
   };
 
   const handleSendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() && !selectedImage) return;
+
+    let conversationId = currentConversationId;
+    if (!conversationId) {
+      conversationId = await createNewConversation();
+      if (!conversationId) return;
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      type: 'user',
-      content: input.trim(),
-      timestamp: new Date()
+      role: 'user',
+      content: input.trim() || '(Analyzing image)',
+      image_url: selectedImage || undefined,
+      timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
+    await saveMessage(conversationId, 'user', userMessage.content, userMessage.image_url);
     setInput('');
+    setSelectedImage(null);
     setLoading(true);
 
     try {
-      // Check if user has items in closet first
-      const closetItems = await getCloset();
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (closetItems.length === 0) {
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          type: 'assistant',
-          content: "I'd love to help you pick an outfit! However, it looks like your closet is empty. Please add some clothing items to your closet first, then I can create personalized outfit recommendations for your occasion.",
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, assistantMessage]);
-        setLoading(false);
-        return;
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({
+          messages: messages.concat([userMessage]).map((m) => ({
+            role: m.role,
+            content: m.content,
+            image_url: m.image_url,
+          })),
+          conversationId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to get response');
       }
 
-      // Extract occasion and preferences from user message
-      const occasion = extractOccasion(userMessage.content);
-      const palette = extractPalette(userMessage.content);
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let assistantContent = '';
+      let assistantMessageId = (Date.now() + 1).toString();
 
-      // Get outfit suggestions
-      const suggestions = await getSuggestions(occasion, palette, 3);
+      // Add empty assistant message
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: assistantMessageId,
+          role: 'assistant',
+          content: '',
+          timestamp: new Date(),
+        },
+      ]);
 
-      let responseContent = '';
-      const occasionMap: { [key: string]: string } = {
-        'formal': 'formal event',
-        'business': 'business occasion',
-        'date': 'date',
-        'party': 'party',
-        'casual': 'casual outing',
-        'smart_casual': 'smart casual occasion'
-      };
+      if (reader) {
+        let buffer = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-      if (suggestions.length > 0) {
-        responseContent = `Perfect! I've analyzed your closet and found some great outfit options for your ${occasionMap[occasion] || 'occasion'}. Here are my top recommendations:`;
-      } else {
-        responseContent = `I understand you need an outfit for your ${occasionMap[occasion] || 'occasion'}. While I couldn't find perfect matches in your current closet, here are some suggestions based on what would work well:`;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                const delta = parsed.choices?.[0]?.delta?.content;
+                if (delta) {
+                  assistantContent += delta;
+                  setMessages((prev) =>
+                    prev.map((m) =>
+                      m.id === assistantMessageId ? { ...m, content: assistantContent } : m
+                    )
+                  );
+                }
+              } catch (e) {
+                // Skip invalid JSON
+              }
+            }
+          }
+        }
       }
 
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'assistant',
-        content: responseContent,
-        outfits: suggestions,
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, assistantMessage]);
+      // Save final assistant message
+      await saveMessage(conversationId, 'assistant', assistantContent);
+      loadConversations();
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error?.message || 'Failed to get outfit suggestions',
-        variant: 'destructive'
+        description: error.message,
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleTryOn = async (outfit: any) => {
-    try {
-      const job = await createTryOnJob(outfit.items);
-      toast({
-        title: 'Try-On Started',
-        description: `Job ${job.id} created. Check Try-On page for results.`
-      });
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error?.message || 'Failed to start try-on',
-        variant: 'destructive'
-      });
-    }
-  };
-
   return (
-    <main className="container mx-auto px-6 py-8 max-w-4xl">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="bg-primary/10 p-2 rounded-full">
-          <Sparkles className="h-6 w-6 text-primary" />
+    <main className="container mx-auto px-6 py-8 max-w-5xl">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="bg-primary/10 p-2 rounded-full">
+            <Sparkles className="h-6 w-6 text-primary" />
+          </div>
+          <h1 className="text-2xl font-bold">AI Style Assistant</h1>
         </div>
-        <h1 className="text-2xl font-bold">AI Style Assistant</h1>
+        <div className="flex gap-2">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <History className="h-4 w-4" />
+                History
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Conversation History</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {conversations.map((conv) => (
+                  <Button
+                    key={conv.id}
+                    variant={conv.id === currentConversationId ? 'secondary' : 'ghost'}
+                    className="w-full justify-start"
+                    onClick={() => loadConversation(conv.id)}
+                  >
+                    <div className="flex flex-col items-start">
+                      <span className="font-medium">{conv.title}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(conv.updated_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </Button>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
+          <Button onClick={createNewConversation} size="sm">
+            <Plus className="h-4 w-4" />
+            New Chat
+          </Button>
+        </div>
       </div>
 
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="space-y-4 max-h-96 overflow-y-auto">
-            {messages.map((message) => (
-              <div key={message.id} className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`flex gap-3 max-w-[80%] ${message.type === 'user' ? 'flex-row-reverse' : ''}`}>
-                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                    message.type === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary'
-                  }`}>
-                    {message.type === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-                  </div>
-                  <div className="space-y-2">
-                    <div className={`p-3 rounded-2xl ${
-                      message.type === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary'
-                    }`}>
-                      <p className="text-sm">{message.content}</p>
+      <Card className="mb-6 h-[calc(100vh-300px)]">
+        <CardContent className="p-4 h-full overflow-y-auto">
+          {messages.length === 0 ? (
+            <div className="h-full flex items-center justify-center text-center">
+              <div className="space-y-4 max-w-md">
+                <div className="bg-primary/10 p-4 rounded-full inline-block">
+                  <Sparkles className="h-8 w-8 text-primary" />
+                </div>
+                <h2 className="text-xl font-semibold">Your Personal Fashion AI</h2>
+                <p className="text-muted-foreground">
+                  I learn your style preferences, analyze outfit photos, and recommend perfect combinations from your closet. Upload an image or describe your occasion!
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div className={`flex gap-3 max-w-[80%] ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                    <div
+                      className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                        message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary'
+                      }`}
+                    >
+                      {message.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                     </div>
-                    {message.outfits && message.outfits.length > 0 && (
-                      <div className="space-y-3">
-                        {message.outfits.map((outfit) => (
-                          <Card key={outfit.id} className="border-l-4 border-l-primary">
-                            <CardHeader className="pb-2">
-                              <CardTitle className="text-base flex items-center justify-between">
-                                <span>{outfit.title}</span>
-                                <Button size="sm" onClick={() => handleTryOn(outfit)}>
-                                  Try On
-                                </Button>
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent className="pt-0">
-                              <p className="text-sm text-muted-foreground mb-3">{outfit.rationale}</p>
-                              <div className="flex flex-wrap gap-2">
-                                {outfit.items.map((item: any) => (
-                                  <span key={item.id} className="text-xs px-2 py-1 rounded-full border bg-card capitalize inline-flex items-center gap-2">
-                                    <span className="h-3 w-3 rounded-sm border" style={{ backgroundColor: item.colorHex || '#ccc' }} />
-                                    {item.category}
-                                  </span>
-                                ))}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
+                    <div className="space-y-2">
+                      {message.image_url && (
+                        <img
+                          src={message.image_url}
+                          alt="Uploaded"
+                          className="rounded-lg max-w-sm border"
+                        />
+                      )}
+                      <div
+                        className={`p-3 rounded-2xl ${
+                          message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary'
+                        }`}
+                      >
+                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-            {loading && (
-              <div className="flex gap-3 justify-start">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-secondary">
-                  <Bot className="h-4 w-4" />
+              ))}
+              {loading && (
+                <div className="flex gap-3 justify-start">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-secondary">
+                    <Bot className="h-4 w-4" />
+                  </div>
+                  <div className="p-3 rounded-2xl bg-secondary">
+                    <p className="text-sm">Thinking...</p>
+                  </div>
                 </div>
-                <div className="p-3 rounded-2xl bg-secondary">
-                  <p className="text-sm">Analyzing your closet and finding the perfect outfit...</p>
-                </div>
-              </div>
-            )}
-          </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      <div className="flex gap-3">
-        <Textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Tell me about your occasion... (e.g., I'm going to a wedding this weekend, I have a job interview tomorrow, etc.)"
-          className="flex-1 resize-none"
-          rows={2}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSendMessage();
-            }
-          }}
-          disabled={loading}
-        />
-        <Button onClick={handleSendMessage} disabled={loading || !input.trim()} size="icon" className="self-end">
-          <Send className="h-4 w-4" />
-        </Button>
+      <div className="space-y-3">
+        {selectedImage && (
+          <div className="relative inline-block">
+            <img src={selectedImage} alt="Selected" className="h-20 rounded-lg border" />
+            <Button
+              size="icon"
+              variant="destructive"
+              className="absolute -top-2 -right-2 h-6 w-6"
+              onClick={() => setSelectedImage(null)}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        )}
+        <div className="flex gap-3">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleImageUpload}
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={loading || uploadingImage}
+          >
+            <ImageIcon className="h-4 w-4" />
+          </Button>
+          <Textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Describe your occasion or ask for style advice... (e.g., 'I have a wedding this weekend' or 'What should I wear for a job interview?')"
+            className="flex-1 resize-none"
+            rows={2}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+              }
+            }}
+            disabled={loading}
+          />
+          <Button
+            onClick={handleSendMessage}
+            disabled={loading || (!input.trim() && !selectedImage)}
+            size="icon"
+            className="self-end"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </main>
   );

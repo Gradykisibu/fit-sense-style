@@ -1,1 +1,10 @@
 project_id = "mrbbypwtmghibsmejpbr"
+
+[functions.ai-assistant]
+verify_jwt = true
+
+[functions.analyze-outfit]
+verify_jwt = true
+
+[functions.generate-outfit-image]
+verify_jwt = true
