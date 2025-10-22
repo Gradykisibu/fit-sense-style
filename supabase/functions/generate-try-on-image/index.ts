@@ -112,7 +112,7 @@ serve(async (req) => {
     const { error: updateError } = await supabase
       .from('try_on_jobs')
       .update({
-        status: 'completed',
+        status: 'success',
         result_image_url: imageUrl
       })
       .eq('id', job.id);
