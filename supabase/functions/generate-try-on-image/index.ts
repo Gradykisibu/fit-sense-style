@@ -65,18 +65,43 @@ serve(async (req) => {
       throw jobError;
     }
 
-    // Create a prompt for the AI to generate a combined outfit visualization
+    // Create detailed descriptions for each item
     const itemDescriptions = items.map((item: any) => 
       `${item.category}${item.color ? ` in ${item.color}` : ''}${item.brand ? ` by ${item.brand}` : ''}`
     ).join(', ');
 
-    const prompt = `Create a professional fashion illustration showing a complete outfit combination featuring: ${itemDescriptions}. 
-    The illustration should be clean, modern, and show how these items work together as a cohesive outfit. 
-    Style: fashion sketch, clean background, professional presentation.`;
+    // Build message content with images and text
+    const messageContent: any[] = [
+      {
+        type: 'text',
+        text: `Create a PHOTOREALISTIC fashion photograph showing these clothing items styled together on a professional fashion model or mannequin. Items to style: ${itemDescriptions}. 
 
-    console.log('Generating image with prompt:', prompt);
+Requirements:
+- Professional fashion photography style with studio lighting
+- Realistic, high-quality photographic rendering (NOT illustration, NOT cartoon, NOT sketch)
+- Show the actual clothing items working together as a complete outfit
+- Clean, neutral background with proper depth and lighting
+- Accurate colors and textures matching the provided items
+- Full body shot showing how all pieces coordinate
+- High fashion editorial style`
+      }
+    ];
 
-    // Generate the image using Lovable AI
+    // Add item images to the message
+    for (const item of items) {
+      if (item.image_url) {
+        messageContent.push({
+          type: 'image_url',
+          image_url: {
+            url: item.image_url
+          }
+        });
+      }
+    }
+
+    console.log('Generating realistic try-on with', items.length, 'items');
+
+    // Generate the image using Lovable AI with vision capabilities
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -88,7 +113,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'user',
-            content: prompt
+            content: messageContent
           }
         ],
         modalities: ['image', 'text']
