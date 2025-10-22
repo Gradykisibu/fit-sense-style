@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Loader2, Lock, ImageIcon, CheckCircle2 } from 'lucide-react';
+import { Sparkles, Loader2, Lock, ImageIcon, CheckCircle2, Trash2, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { hasFeatureAccess } from '@/lib/subscription';
 
@@ -85,6 +85,26 @@ export default function VirtualTryOn() {
         ? prev.filter(id => id !== itemId)
         : [...prev, itemId]
     );
+  };
+
+  const deleteJob = async (jobId: string) => {
+    try {
+      const { error } = await supabase
+        .from('try_on_jobs')
+        .delete()
+        .eq('id', jobId);
+      
+      if (error) throw error;
+      
+      toast({ title: 'Try-on deleted successfully' });
+      fetchJobs();
+    } catch (error: any) {
+      toast({
+        title: 'Failed to delete try-on',
+        description: error.message,
+        variant: 'destructive'
+      });
+    }
   };
 
   const generateTryOn = async () => {
@@ -237,11 +257,19 @@ export default function VirtualTryOn() {
               <CardContent>
                 <div className="grid gap-6 md:grid-cols-2">
                   {jobs.map((job) => (
-                    <Card key={job.id}>
+                    <Card key={job.id} className="relative group">
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => deleteJob(job.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                       <CardContent className="p-4">
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
-                            <Badge variant={job.status === 'completed' ? 'default' : 'secondary'}>
+                            <Badge variant={job.status === 'success' || job.status === 'done' ? 'default' : 'secondary'}>
                               {job.status}
                             </Badge>
                             <span className="text-xs text-muted-foreground">
