@@ -12,12 +12,14 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { PLAN_LIMITS, getPlanBadgeColor } from '@/lib/subscription';
-import { Crown, TrendingUp } from 'lucide-react';
+import { Crown, TrendingUp, Sun, Moon, Monitor } from 'lucide-react';
+import { useTheme } from '@/components/ThemeProvider';
 
 export default function Settings() {
   const [form, setForm] = useState<AppSettings>(getSettings());
   const { toast } = useToast();
   const { user } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
@@ -108,6 +110,24 @@ export default function Settings() {
             <TrendingUp className="w-4 h-4 mr-2" />
             {plan === 'free' ? 'Upgrade Plan' : 'Change Plan'}
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Appearance Card */}
+      <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2"><Sun className="w-5 h-5" />Appearance</CardTitle></CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-2">
+            <Button variant={theme === 'light' ? 'default' : 'outline'} size="sm" onClick={() => setTheme('light')}>
+              <Sun className="w-4 h-4 mr-2" /> Light
+            </Button>
+            <Button variant={theme === 'dark' ? 'default' : 'outline'} size="sm" onClick={() => setTheme('dark')}>
+              <Moon className="w-4 h-4 mr-2" /> Dark
+            </Button>
+            <Button variant={theme === 'system' ? 'default' : 'outline'} size="sm" onClick={() => setTheme('system')}>
+              <Monitor className="w-4 h-4 mr-2" /> System
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
