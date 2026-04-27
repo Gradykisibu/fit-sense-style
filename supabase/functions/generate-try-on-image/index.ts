@@ -1,162 +1,119 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import {
+  authenticate,
+  corsHeaders,
+  enforceUsage,
+  errorResponse,
+  incrementUsage,
+  jsonResponse,
+  requirePlan,
+} from "../_shared/usage.ts";
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')!;
+    const auth = await authenticate(req);
+    if (!auth.ok) return auth.response;
+    const { userId, adminClient } = auth;
 
-    const authHeader = req.headers.get('Authorization')!;
-    const token = authHeader.replace('Bearer ', '');
+    // Plan gate: Premium or Pro only
+    const planCheck = await requirePlan(adminClient, userId, ["premium", "pro"]);
+    if (!planCheck.ok) return planCheck.response;
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-
-    if (userError || !user) {
-      throw new Error('Unauthorized');
-    }
-
-    // Check user's subscription plan
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('subscription_plan')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile || !['premium', 'pro'].includes(profile.subscription_plan)) {
-      return new Response(
-        JSON.stringify({ error: 'This feature requires Premium or Pro subscription' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // Try-on counts toward analyses quota
+    const permit = await enforceUsage(adminClient, userId, "analyses");
+    if (!permit.ok) return permit.response;
 
     const { items } = await req.json();
-
     if (!items || items.length < 2) {
-      return new Response(
-        JSON.stringify({ error: 'At least 2 items are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse("bad_request", "At least 2 items are required", 400);
     }
 
-    // Create a try-on job
-    const { data: job, error: jobError } = await supabase
-      .from('try_on_jobs')
-      .insert({
-        user_id: user.id,
-        items: items,
-        status: 'processing'
-      })
+    const { data: job, error: jobError } = await adminClient
+      .from("try_on_jobs")
+      .insert({ user_id: userId, items, status: "processing" })
       .select()
       .single();
-
     if (jobError) {
-      console.error('Job creation error:', jobError);
-      throw jobError;
+      console.error("Job creation error:", jobError);
+      return errorResponse("server_error", "Could not create try-on job", 500);
     }
 
-    // Create detailed descriptions for each item
-    const itemDescriptions = items.map((item: any) => 
-      `${item.category}${item.color ? ` in ${item.color}` : ''}${item.brand ? ` by ${item.brand}` : ''}`
-    ).join(', ');
+    const itemDescriptions = items
+      .map(
+        (item: any) =>
+          `${item.category}${item.color ? ` in ${item.color}` : ""}${item.brand ? ` by ${item.brand}` : ""}`,
+      )
+      .join(", ");
 
-    // Build message content with images and text
     const messageContent: any[] = [
       {
-        type: 'text',
-        text: `Create a PHOTOREALISTIC fashion photograph showing these clothing items styled together on a professional fashion model or mannequin. Items to style: ${itemDescriptions}. 
+        type: "text",
+        text: `Create a PHOTOREALISTIC fashion photograph showing these clothing items styled together on a professional fashion model or mannequin. Items to style: ${itemDescriptions}.
 
 Requirements:
-- Professional fashion photography style with studio lighting
-- Realistic, high-quality photographic rendering (NOT illustration, NOT cartoon, NOT sketch)
-- Show the actual clothing items working together as a complete outfit
-- Clean, neutral background with proper depth and lighting
-- Accurate colors and textures matching the provided items
-- Full body shot showing how all pieces coordinate
-- High fashion editorial style`
-      }
+- Professional fashion photography with studio lighting
+- Realistic photographic rendering (NOT illustration)
+- Clean neutral background
+- Accurate colors and textures matching provided items
+- Full body shot showing how all pieces coordinate`,
+      },
     ];
 
-    // Add item images to the message
     for (const item of items) {
       if (item.image_url) {
         messageContent.push({
-          type: 'image_url',
-          image_url: {
-            url: item.image_url
-          }
+          type: "image_url",
+          image_url: { url: item.image_url },
         });
       }
     }
 
-    console.log('Generating realistic try-on with', items.length, 'items');
-
-    // Generate the image using Lovable AI with vision capabilities
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
+    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${lovableApiKey}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-image-preview',
-        messages: [
-          {
-            role: 'user',
-            content: messageContent
-          }
-        ],
-        modalities: ['image', 'text']
+        model: "google/gemini-2.5-flash-image-preview",
+        messages: [{ role: "user", content: messageContent }],
+        modalities: ["image", "text"],
       }),
     });
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error('AI generation failed:', errorText);
-      throw new Error('AI generation failed');
+      console.error("AI generation failed:", errorText);
+      await adminClient.from("try_on_jobs").update({ status: "failed" }).eq("id", job.id);
+      return errorResponse("server_error", "AI generation failed", 500);
     }
 
     const aiData = await aiResponse.json();
     const imageUrl = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-
     if (!imageUrl) {
-      throw new Error('No image generated');
+      await adminClient.from("try_on_jobs").update({ status: "failed" }).eq("id", job.id);
+      return errorResponse("server_error", "No image generated", 500);
     }
 
-    // Update the job with the result
-    const { error: updateError } = await supabase
-      .from('try_on_jobs')
-      .update({
-        status: 'success',
-        result_image_url: imageUrl
-      })
-      .eq('id', job.id);
-
+    const { error: updateError } = await adminClient
+      .from("try_on_jobs")
+      .update({ status: "success", result_image_url: imageUrl })
+      .eq("id", job.id);
     if (updateError) {
-      console.error('Update error:', updateError);
-      throw updateError;
+      console.error("Update error:", updateError);
+      return errorResponse("server_error", "Could not save result", 500);
     }
 
-    return new Response(
-      JSON.stringify({ success: true, jobId: job.id, imageUrl }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    await incrementUsage(adminClient, userId, "analyses");
 
+    return jsonResponse({ success: true, jobId: job.id, imageUrl }, 200);
   } catch (error: any) {
-    console.error('Error:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    console.error("Error:", error);
+    return errorResponse("server_error", error?.message ?? "Unknown error", 500);
   }
 });

@@ -1,95 +1,82 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import {
+  authenticate,
+  corsHeaders,
+  enforceUsage,
+  errorResponse,
+  incrementUsage,
+  jsonResponse,
+} from "../_shared/usage.ts";
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const { suggestions, type = 'swap' } = await req.json();
-    
+    const auth = await authenticate(req);
+    if (!auth.ok) return auth.response;
+    const { userId, adminClient } = auth;
+
+    // Image generation counts as an analysis
+    const permit = await enforceUsage(adminClient, userId, "analyses");
+    if (!permit.ok) return permit.response;
+
+    const { suggestions, type = "swap" } = await req.json();
     if (!suggestions || !Array.isArray(suggestions)) {
-      throw new Error('Suggestions array is required');
+      return errorResponse("bad_request", "Suggestions array is required", 400);
     }
 
-    console.log('Generating outfit image with type:', type);
-
     let prompt: string;
-    
-    if (type === 'full') {
-      // For outfit check - generate full body outfit visualization
-      const outfitDescription = suggestions.join('. ');
+    if (type === "full") {
+      const outfitDescription = suggestions.join(". ");
       prompt = `Generate a professional fashion photograph showing a complete outfit on a mannequin or model against a clean background. The outfit consists of: ${outfitDescription}. Show the full body, well-coordinated, high-quality fashion photography style, professional lighting.`;
     } else {
-      // For mix & match - show only the items to swap
       const itemsToSwap = suggestions
         .map((s: string) => {
-          const cleanSuggestion = s.replace(/\*\*/g, '');
-          // Extract the item category from suggestions like "Change the blazer: ..."
+          const cleanSuggestion = s.replace(/\*\*/g, "");
           const match = cleanSuggestion.match(/Change the ([^:]+):/i);
           if (match) {
             const category = match[1];
-            const description = cleanSuggestion.split(':')[1]?.trim() || cleanSuggestion;
+            const description = cleanSuggestion.split(":")[1]?.trim() || cleanSuggestion;
             return `${category}: ${description}`;
           }
           return cleanSuggestion;
         })
-        .join('. ');
-      
-      prompt = `Product photography showing individual clothing items laid out on a clean white background. Items to display: ${itemsToSwap}. Each item should be clearly visible, well-lit, professional fashion photography style, high quality, catalog style presentation.`;
+        .join(". ");
+      prompt = `Product photography showing individual clothing items laid out on a clean white background. Items to display: ${itemsToSwap}. Each item clearly visible, well-lit, professional fashion photography style.`;
     }
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-image-preview',
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        modalities: ['image', 'text'],
+        model: "google/gemini-2.5-flash-image-preview",
+        messages: [{ role: "user", content: prompt }],
+        modalities: ["image", "text"],
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('AI Gateway error:', errorText);
-      throw new Error(`Failed to generate image: ${response.status}`);
+      console.error("AI Gateway error:", errorText);
+      return errorResponse("server_error", `Failed to generate image: ${response.status}`, 500);
     }
 
     const data = await response.json();
     const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-    
     if (!imageUrl) {
-      throw new Error('No image in AI response');
+      return errorResponse("server_error", "No image in AI response", 500);
     }
 
-    return new Response(
-      JSON.stringify({ imageUrl }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      },
-    );
-  } catch (error) {
-    console.error('Error in generate-outfit-image function:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      },
-    );
+    await incrementUsage(adminClient, userId, "analyses");
+
+    return jsonResponse({ imageUrl }, 200);
+  } catch (error: any) {
+    console.error("Error in generate-outfit-image function:", error);
+    return errorResponse("server_error", error?.message ?? "Unknown error", 500);
   }
 });
