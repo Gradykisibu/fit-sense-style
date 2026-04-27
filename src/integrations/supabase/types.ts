@@ -420,7 +420,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_analyses: {
+        Args: { _user_id: string }
+        Returns: {
+          monthly_analyses_used: number
+          usage_reset_date: string
+        }[]
+      }
+      increment_chats: {
+        Args: { _user_id: string }
+        Returns: {
+          monthly_chats_used: number
+          usage_reset_date: string
+        }[]
+      }
+      reset_usage_if_needed: { Args: { _user_id: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
