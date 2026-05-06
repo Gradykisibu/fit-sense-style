@@ -109,6 +109,30 @@ export async function deleteClosetItem(id: string): Promise<void> {
 }
 
 
+export async function editOutfitImage(params: {
+  imageUrl: string;
+  currentOutfit?: any;
+  suggestions: any[];
+}): Promise<{ imageUrl: string }> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
+  const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/edit-outfit-image`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(params),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error?.error?.message || error?.error || 'Failed to edit outfit image');
+  }
+  return res.json();
+}
+
 export async function testConnection(): Promise<boolean> {
   try {
     await getCloset();
