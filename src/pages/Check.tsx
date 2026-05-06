@@ -2,18 +2,29 @@ import React, { useMemo, useState } from 'react';
 import { UploadCard } from '@/components/UploadCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { analyzeOutfitImage } from '@/lib/api';
+import { analyzeOutfitImage, editOutfitImage } from '@/lib/api';
 import { ScoreBadge } from '@/components/ScoreBadge';
 import { DetectedItemsList } from '@/components/DetectedItemsList';
 import { Stepper } from '@/components/Stepper';
 import { useToast } from '@/hooks/use-toast';
 import { saveSnapshot } from '@/lib/settings';
 
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result as string);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
 export default function Check() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [editedUrl, setEditedUrl] = useState<string | null>(null);
   const { toast } = useToast();
 
   const stepIndex = useMemo(() => (result ? 2 : file ? 1 : 0), [file, result]);
@@ -22,6 +33,7 @@ export default function Check() {
     if (!file) return;
     setLoading(true);
     setResult(null);
+    setEditedUrl(null);
     try {
       const r = await analyzeOutfitImage(file);
       setResult(r);
@@ -29,6 +41,25 @@ export default function Check() {
       toast({ title: 'Analysis failed', description: e?.message || 'Please try again.' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const onGenerateEdit = async () => {
+    if (!file || !result?.suggestedSwaps?.length) return;
+    setEditing(true);
+    setEditedUrl(null);
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      const { imageUrl } = await editOutfitImage({
+        imageUrl: dataUrl,
+        currentOutfit: result.detectedItems,
+        suggestions: result.suggestedSwaps,
+      });
+      setEditedUrl(imageUrl);
+    } catch (e: any) {
+      toast({ title: 'Could not generate edited photo', description: e?.message || 'Please try again.' });
+    } finally {
+      setEditing(false);
     }
   };
 
@@ -102,8 +133,15 @@ export default function Check() {
               </Card>
               {result.suggestedSwaps && result.suggestedSwaps.length > 0 && (
                 <Card>
-                  <CardHeader><CardTitle>Suggested Swaps</CardTitle></CardHeader>
-                  <CardContent>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between gap-2">
+                      <span>Suggested Swaps</span>
+                      <Button size="sm" onClick={onGenerateEdit} disabled={editing}>
+                        {editing ? 'Generating…' : 'See it on me'}
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
                     <ul className="space-y-2">
                       {result.suggestedSwaps.map((swap: any, idx: number) => (
                         <li key={idx} className="text-sm">
@@ -111,6 +149,12 @@ export default function Check() {
                         </li>
                       ))}
                     </ul>
+                    {editedUrl && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-muted-foreground">Edited preview (identity, pose & background preserved):</p>
+                        <img src={editedUrl} alt="Edited outfit preview" className="w-full rounded-md border" />
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}
