@@ -14,3 +14,6 @@ verify_jwt = true
 
 [functions.generate-shopping-recommendations]
 verify_jwt = true
+
+[functions.edit-outfit-image]
+verify_jwt = true
