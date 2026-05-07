@@ -6,6 +6,8 @@ import {
   errorResponse,
   incrementUsage,
   jsonResponse,
+  logEvent,
+  rateLimit,
 } from "../_shared/usage.ts";
 
 serve(async (req) => {
@@ -16,11 +18,16 @@ serve(async (req) => {
   try {
     const auth = await authenticate(req);
     if (!auth.ok) return auth.response;
-    const { userId, userClient, adminClient } = auth;
+    const { userId, userClient, adminClient, ip } = auth;
 
-    // Server-side plan + usage enforcement
+    const rl = rateLimit(userId, ip, "analyze-outfit", { limit: 8, windowMs: 60_000 });
+    if (rl) { logEvent("analyze-outfit", "rate_limited", { userId }); return rl; }
+
     const permit = await enforceUsage(adminClient, userId, "analyses");
-    if (!permit.ok) return permit.response;
+    if (!permit.ok) {
+      logEvent("analyze-outfit", "blocked", { userId });
+      return permit.response;
+    }
 
     // Get user's name from profiles
     const { data: profile } = await userClient

@@ -6,6 +6,8 @@ import {
   errorResponse,
   incrementUsage,
   jsonResponse,
+  logEvent,
+  rateLimit,
   requirePlan,
 } from "../_shared/usage.ts";
 
@@ -17,14 +19,16 @@ serve(async (req) => {
   try {
     const auth = await authenticate(req);
     if (!auth.ok) return auth.response;
-    const { userId, adminClient } = auth;
+    const { userId, adminClient, ip } = auth;
 
-    // Plan-gated (visual outfit edit is a premium feature)
+    const rl = rateLimit(userId, ip, "edit-outfit-image", { limit: 5, windowMs: 60_000 });
+    if (rl) { logEvent("edit-outfit-image", "rate_limited", { userId }); return rl; }
+
     const planCheck = await requirePlan(adminClient, userId, ["premium", "pro"]);
     if (!planCheck.ok) return planCheck.response;
 
     const permit = await enforceUsage(adminClient, userId, "analyses");
-    if (!permit.ok) return permit.response;
+    if (!permit.ok) { logEvent("edit-outfit-image", "blocked", { userId }); return permit.response; }
 
     const { imageUrl, currentOutfit, suggestions } = await req.json();
     if (!imageUrl || typeof imageUrl !== "string") {
