@@ -113,7 +113,8 @@ Requirements:
       return errorResponse("server_error", "Could not save result", 500);
     }
 
-    await incrementUsage(adminClient, userId, "analyses");
+    await incrementUsage(adminClient, userId, "tryons");
+    logEvent("generate-try-on-image", "success", { userId });
 
     return jsonResponse({ success: true, jobId: job.id, imageUrl }, 200);
   } catch (error: any) {
