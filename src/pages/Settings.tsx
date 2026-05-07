@@ -34,10 +34,7 @@ export default function Settings() {
       .select('*')
       .eq('id', user.id)
       .single();
-    if (data) {
-      setProfile(data);
-    }
-
+    if (data) setProfile(data);
   };
 
   const save = () => { saveSettings(form); toast({ title: 'Settings saved' }); };
@@ -87,8 +84,8 @@ export default function Settings() {
                   {analysesUsed} / {limits.monthlyAnalyses === Infinity ? '∞' : limits.monthlyAnalyses}
                 </span>
               </div>
-              <Progress
-                value={limits.monthlyAnalyses === Infinity ? 0 : (analysesUsed / limits.monthlyAnalyses) * 100}
+              <Progress 
+                value={limits.monthlyAnalyses === Infinity ? 0 : (analysesUsed / limits.monthlyAnalyses) * 100} 
               />
             </div>
 
@@ -99,8 +96,8 @@ export default function Settings() {
                   {chatsUsed} / {limits.monthlyChats === Infinity ? '∞' : limits.monthlyChats}
                 </span>
               </div>
-              <Progress
-                value={limits.monthlyChats === Infinity ? 0 : (chatsUsed / limits.monthlyChats) * 100}
+              <Progress 
+                value={limits.monthlyChats === Infinity ? 0 : (chatsUsed / limits.monthlyChats) * 100} 
               />
             </div>
 

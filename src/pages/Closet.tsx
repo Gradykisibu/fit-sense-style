@@ -36,13 +36,27 @@ export default function Closet() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+<<<<<<< HEAD
     if (!file.type.startsWith('image/')) {
       toast({ title: 'Invalid file', description: 'Please upload an image file', variant: 'destructive' });
+=======
+    const { validateImageFile } = await import('@/lib/uploads');
+    const v = validateImageFile(file);
+    if (!v.ok) {
+      toast({ title: 'Invalid file', description: (v as { reason: string }).reason, variant: 'destructive' });
+      return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({ title: 'Not signed in', variant: 'destructive' });
+>>>>>>> f2c68d17d64688b57b4d0002fa165edec2e20d0d
       return;
     }
 
     setUploading(true);
     try {
+<<<<<<< HEAD
       const fileExt = file.name.split('.').pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
       const filePath = `${fileName}`;
@@ -58,6 +72,19 @@ export default function Closet() {
         .getPublicUrl(filePath);
 
       setForm(f => ({ ...f, imageUrl: publicUrl }));
+=======
+      const fileExt = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      const filePath = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('closet-items')
+        .upload(filePath, file, { contentType: file.type, upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      // Bucket is private — store the path; UI resolves via signed URLs.
+      setForm(f => ({ ...f, imageUrl: filePath }));
+>>>>>>> f2c68d17d64688b57b4d0002fa165edec2e20d0d
       toast({ title: 'Image uploaded successfully' });
     } catch (error: any) {
       console.error('Upload error:', error);

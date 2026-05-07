@@ -6,6 +6,10 @@ import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./components/ThemeProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
+<<<<<<< HEAD
+=======
+import CountryGate from "./components/CountryGate";
+>>>>>>> f2c68d17d64688b57b4d0002fa165edec2e20d0d
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
@@ -38,7 +42,11 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             
             {/* Protected routes */}
+<<<<<<< HEAD
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+=======
+            <Route element={<ProtectedRoute><CountryGate><AppLayout /></CountryGate></ProtectedRoute>}>
+>>>>>>> f2c68d17d64688b57b4d0002fa165edec2e20d0d
               <Route path="/" element={<Index />} />
               <Route path="/check" element={<Check />} />
               <Route path="/mix" element={<Mix />} />

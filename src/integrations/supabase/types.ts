@@ -207,6 +207,10 @@ export type Database = {
       }
       profiles: {
         Row: {
+<<<<<<< HEAD
+=======
+          account_status: string
+>>>>>>> f2c68d17d64688b57b4d0002fa165edec2e20d0d
           avatar_url: string | null
           country: string | null
           created_at: string
@@ -214,6 +218,11 @@ export type Database = {
           id: string
           monthly_analyses_used: number
           monthly_chats_used: number
+<<<<<<< HEAD
+=======
+          monthly_shopping_used: number
+          monthly_tryons_used: number
+>>>>>>> f2c68d17d64688b57b4d0002fa165edec2e20d0d
           name: string | null
           phone: string | null
           subscription_plan: string
@@ -222,6 +231,10 @@ export type Database = {
           usage_reset_date: string | null
         }
         Insert: {
+<<<<<<< HEAD
+=======
+          account_status?: string
+>>>>>>> f2c68d17d64688b57b4d0002fa165edec2e20d0d
           avatar_url?: string | null
           country?: string | null
           created_at?: string
@@ -229,6 +242,11 @@ export type Database = {
           id: string
           monthly_analyses_used?: number
           monthly_chats_used?: number
+<<<<<<< HEAD
+=======
+          monthly_shopping_used?: number
+          monthly_tryons_used?: number
+>>>>>>> f2c68d17d64688b57b4d0002fa165edec2e20d0d
           name?: string | null
           phone?: string | null
           subscription_plan?: string
@@ -237,6 +255,10 @@ export type Database = {
           usage_reset_date?: string | null
         }
         Update: {
+<<<<<<< HEAD
+=======
+          account_status?: string
+>>>>>>> f2c68d17d64688b57b4d0002fa165edec2e20d0d
           avatar_url?: string | null
           country?: string | null
           created_at?: string
@@ -244,6 +266,11 @@ export type Database = {
           id?: string
           monthly_analyses_used?: number
           monthly_chats_used?: number
+<<<<<<< HEAD
+=======
+          monthly_shopping_used?: number
+          monthly_tryons_used?: number
+>>>>>>> f2c68d17d64688b57b4d0002fa165edec2e20d0d
           name?: string | null
           phone?: string | null
           subscription_plan?: string
@@ -434,6 +461,23 @@ export type Database = {
           usage_reset_date: string
         }[]
       }
+<<<<<<< HEAD
+=======
+      increment_shopping: {
+        Args: { _user_id: string }
+        Returns: {
+          monthly_shopping_used: number
+          usage_reset_date: string
+        }[]
+      }
+      increment_tryons: {
+        Args: { _user_id: string }
+        Returns: {
+          monthly_tryons_used: number
+          usage_reset_date: string
+        }[]
+      }
+>>>>>>> f2c68d17d64688b57b4d0002fa165edec2e20d0d
       reset_usage_if_needed: { Args: { _user_id: string }; Returns: undefined }
     }
     Enums: {

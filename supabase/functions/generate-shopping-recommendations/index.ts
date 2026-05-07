@@ -6,6 +6,11 @@ import {
   errorResponse,
   incrementUsage,
   jsonResponse,
+<<<<<<< HEAD
+=======
+  logEvent,
+  rateLimit,
+>>>>>>> f2c68d17d64688b57b4d0002fa165edec2e20d0d
   requirePlan,
 } from "../_shared/usage.ts";
 
@@ -17,6 +22,7 @@ serve(async (req) => {
   try {
     const auth = await authenticate(req);
     if (!auth.ok) return auth.response;
+<<<<<<< HEAD
     const { userId, adminClient } = auth;
 
     // Plan gate: Pro only
@@ -26,6 +32,18 @@ serve(async (req) => {
     // Counts toward chats quota (advisory AI report)
     const permit = await enforceUsage(adminClient, userId, "chats");
     if (!permit.ok) return permit.response;
+=======
+    const { userId, adminClient, ip } = auth;
+
+    const rl = rateLimit(userId, ip, "shopping", { limit: 3, windowMs: 60_000 });
+    if (rl) { logEvent("generate-shopping-recommendations", "rate_limited", { userId }); return rl; }
+
+    const planCheck = await requirePlan(adminClient, userId, ["pro"]);
+    if (!planCheck.ok) return planCheck.response;
+
+    const permit = await enforceUsage(adminClient, userId, "shopping");
+    if (!permit.ok) { logEvent("generate-shopping-recommendations", "blocked", { userId }); return permit.response; }
+>>>>>>> f2c68d17d64688b57b4d0002fa165edec2e20d0d
 
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
 
@@ -117,7 +135,12 @@ Generate a structured shopping report (JSON) covering wardrobe gaps (3-5), recom
       },
     };
 
+<<<<<<< HEAD
     await incrementUsage(adminClient, userId, "chats");
+=======
+    await incrementUsage(adminClient, userId, "shopping");
+    logEvent("generate-shopping-recommendations", "success", { userId });
+>>>>>>> f2c68d17d64688b57b4d0002fa165edec2e20d0d
 
     return jsonResponse({ success: true, report }, 200);
   } catch (error: any) {
