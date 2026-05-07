@@ -1,0 +1,19 @@
+project_id = "mrbbypwtmghibsmejpbr"
+
+[functions.ai-assistant]
+verify_jwt = true
+
+[functions.analyze-outfit]
+verify_jwt = true
+
+[functions.generate-outfit-image]
+verify_jwt = true
+
+[functions.generate-try-on-image]
+verify_jwt = true
+
+[functions.generate-shopping-recommendations]
+verify_jwt = true
+
+[functions.edit-outfit-image]
+verify_jwt = true
