@@ -207,6 +207,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_status: string
           avatar_url: string | null
           country: string | null
           created_at: string
@@ -214,6 +215,8 @@ export type Database = {
           id: string
           monthly_analyses_used: number
           monthly_chats_used: number
+          monthly_shopping_used: number
+          monthly_tryons_used: number
           name: string | null
           phone: string | null
           subscription_plan: string
@@ -222,6 +225,7 @@ export type Database = {
           usage_reset_date: string | null
         }
         Insert: {
+          account_status?: string
           avatar_url?: string | null
           country?: string | null
           created_at?: string
@@ -229,6 +233,8 @@ export type Database = {
           id: string
           monthly_analyses_used?: number
           monthly_chats_used?: number
+          monthly_shopping_used?: number
+          monthly_tryons_used?: number
           name?: string | null
           phone?: string | null
           subscription_plan?: string
@@ -237,6 +243,7 @@ export type Database = {
           usage_reset_date?: string | null
         }
         Update: {
+          account_status?: string
           avatar_url?: string | null
           country?: string | null
           created_at?: string
@@ -244,6 +251,8 @@ export type Database = {
           id?: string
           monthly_analyses_used?: number
           monthly_chats_used?: number
+          monthly_shopping_used?: number
+          monthly_tryons_used?: number
           name?: string | null
           phone?: string | null
           subscription_plan?: string
@@ -431,6 +440,20 @@ export type Database = {
         Args: { _user_id: string }
         Returns: {
           monthly_chats_used: number
+          usage_reset_date: string
+        }[]
+      }
+      increment_shopping: {
+        Args: { _user_id: string }
+        Returns: {
+          monthly_shopping_used: number
+          usage_reset_date: string
+        }[]
+      }
+      increment_tryons: {
+        Args: { _user_id: string }
+        Returns: {
+          monthly_tryons_used: number
           usage_reset_date: string
         }[]
       }
