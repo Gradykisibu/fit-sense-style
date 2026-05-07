@@ -39,7 +39,7 @@ export default function Closet() {
     const { validateImageFile } = await import('@/lib/uploads');
     const v = validateImageFile(file);
     if (!v.ok) {
-      toast({ title: 'Invalid file', description: v.reason, variant: 'destructive' });
+      toast({ title: 'Invalid file', description: (v as { reason: string }).reason, variant: 'destructive' });
       return;
     }
 
