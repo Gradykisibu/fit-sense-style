@@ -2,13 +2,15 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ClothingItem } from '@/lib/settings';
+import { useSignedClosetUrl } from '@/lib/storage';
 
 export function ClosetItemCard({ item, onDelete }: { item: ClothingItem; onDelete?: (id: string) => void }) {
+  const signed = useSignedClosetUrl(item.imageUrl);
   return (
     <Card className="overflow-hidden group">
       <div className="aspect-[4/3] bg-muted">
-        {item.imageUrl ? (
-          <img src={item.imageUrl} alt={`${item.category} ${item.brand || ''}`} className="w-full h-full object-cover" loading="lazy" />
+        {signed ? (
+          <img src={signed} alt={`${item.category} ${item.brand || ''}`} className="w-full h-full object-cover" loading="lazy" />
         ) : (
           <div className="w-full h-full" />
         )}
