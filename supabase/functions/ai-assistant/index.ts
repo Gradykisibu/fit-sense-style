@@ -6,6 +6,8 @@ import {
   errorResponse,
   incrementUsage,
   jsonResponse,
+  logEvent,
+  rateLimit,
 } from "../_shared/usage.ts";
 
 serve(async (req) => {
@@ -16,11 +18,17 @@ serve(async (req) => {
   try {
     const auth = await authenticate(req);
     if (!auth.ok) return auth.response;
-    const { userId, userClient, adminClient } = auth;
+    const { userId, userClient, adminClient, ip } = auth;
+
+    const rl = rateLimit(userId, ip, "ai-assistant", { limit: 20, windowMs: 60_000 });
+    if (rl) { logEvent("ai-assistant", "rate_limited", { userId }); return rl; }
 
     // Enforce chat usage server-side
     const permit = await enforceUsage(adminClient, userId, "chats");
-    if (!permit.ok) return permit.response;
+    if (!permit.ok) {
+      logEvent("ai-assistant", "blocked", { userId });
+      return permit.response;
+    }
 
     const { messages, generateImage } = await req.json();
 

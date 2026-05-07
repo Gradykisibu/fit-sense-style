@@ -6,6 +6,8 @@ import {
   errorResponse,
   incrementUsage,
   jsonResponse,
+  logEvent,
+  rateLimit,
   requirePlan,
 } from "../_shared/usage.ts";
 
@@ -17,15 +19,17 @@ serve(async (req) => {
   try {
     const auth = await authenticate(req);
     if (!auth.ok) return auth.response;
-    const { userId, adminClient } = auth;
+    const { userId, adminClient, ip } = auth;
 
-    // Plan gate: Premium or Pro only
+    const rl = rateLimit(userId, ip, "try-on", { limit: 3, windowMs: 60_000 });
+    if (rl) { logEvent("generate-try-on-image", "rate_limited", { userId }); return rl; }
+
     const planCheck = await requirePlan(adminClient, userId, ["premium", "pro"]);
     if (!planCheck.ok) return planCheck.response;
 
-    // Try-on counts toward analyses quota
-    const permit = await enforceUsage(adminClient, userId, "analyses");
-    if (!permit.ok) return permit.response;
+    // Try-on has its own monthly counter
+    const permit = await enforceUsage(adminClient, userId, "tryons");
+    if (!permit.ok) { logEvent("generate-try-on-image", "blocked", { userId }); return permit.response; }
 
     const { items } = await req.json();
     if (!items || items.length < 2) {

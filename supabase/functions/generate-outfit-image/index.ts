@@ -6,6 +6,8 @@ import {
   errorResponse,
   incrementUsage,
   jsonResponse,
+  logEvent,
+  rateLimit,
 } from "../_shared/usage.ts";
 
 serve(async (req) => {
@@ -16,11 +18,13 @@ serve(async (req) => {
   try {
     const auth = await authenticate(req);
     if (!auth.ok) return auth.response;
-    const { userId, adminClient } = auth;
+    const { userId, adminClient, ip } = auth;
 
-    // Image generation counts as an analysis
+    const rl = rateLimit(userId, ip, "generate-outfit-image", { limit: 5, windowMs: 60_000 });
+    if (rl) { logEvent("generate-outfit-image", "rate_limited", { userId }); return rl; }
+
     const permit = await enforceUsage(adminClient, userId, "analyses");
-    if (!permit.ok) return permit.response;
+    if (!permit.ok) { logEvent("generate-outfit-image", "blocked", { userId }); return permit.response; }
 
     const { suggestions, type = "swap" } = await req.json();
     if (!suggestions || !Array.isArray(suggestions)) {
