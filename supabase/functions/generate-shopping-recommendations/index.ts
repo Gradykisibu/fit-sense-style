@@ -19,15 +19,16 @@ serve(async (req) => {
   try {
     const auth = await authenticate(req);
     if (!auth.ok) return auth.response;
-    const { userId, adminClient } = auth;
+    const { userId, adminClient, ip } = auth;
 
-    // Plan gate: Pro only
+    const rl = rateLimit(userId, ip, "shopping", { limit: 3, windowMs: 60_000 });
+    if (rl) { logEvent("generate-shopping-recommendations", "rate_limited", { userId }); return rl; }
+
     const planCheck = await requirePlan(adminClient, userId, ["pro"]);
     if (!planCheck.ok) return planCheck.response;
 
-    // Counts toward chats quota (advisory AI report)
-    const permit = await enforceUsage(adminClient, userId, "chats");
-    if (!permit.ok) return permit.response;
+    const permit = await enforceUsage(adminClient, userId, "shopping");
+    if (!permit.ok) { logEvent("generate-shopping-recommendations", "blocked", { userId }); return permit.response; }
 
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
 
@@ -119,7 +120,8 @@ Generate a structured shopping report (JSON) covering wardrobe gaps (3-5), recom
       },
     };
 
-    await incrementUsage(adminClient, userId, "chats");
+    await incrementUsage(adminClient, userId, "shopping");
+    logEvent("generate-shopping-recommendations", "success", { userId });
 
     return jsonResponse({ success: true, report }, 200);
   } catch (error: any) {
