@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./components/ThemeProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
+import CountryGate from "./components/CountryGate";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
@@ -38,7 +39,7 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             
             {/* Protected routes */}
-            <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+            <Route element={<ProtectedRoute><CountryGate><AppLayout /></CountryGate></ProtectedRoute>}>
               <Route path="/" element={<Index />} />
               <Route path="/check" element={<Check />} />
               <Route path="/mix" element={<Mix />} />
