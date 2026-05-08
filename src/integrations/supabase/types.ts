@@ -312,6 +312,42 @@ export type Database = {
           },
         ]
       }
+      support_messages: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          message: string
+          reply_email: string | null
+          status: string
+          subject: string
+          user_email: string | null
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          message: string
+          reply_email?: string | null
+          status?: string
+          subject: string
+          user_email?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          message?: string
+          reply_email?: string | null
+          status?: string
+          subject?: string
+          user_email?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       trend_reports: {
         Row: {
           created_at: string
