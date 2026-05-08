@@ -212,6 +212,7 @@ export type Database = {
           country: string | null
           created_at: string
           email: string
+          gender: string | null
           id: string
           monthly_analyses_used: number
           monthly_chats_used: number
@@ -230,6 +231,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           email: string
+          gender?: string | null
           id: string
           monthly_analyses_used?: number
           monthly_chats_used?: number
@@ -248,6 +250,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           email?: string
+          gender?: string | null
           id?: string
           monthly_analyses_used?: number
           monthly_chats_used?: number
@@ -429,6 +432,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      change_subscription_plan_dev: {
+        Args: { _plan: string }
+        Returns: undefined
+      }
       increment_analyses: {
         Args: { _user_id: string }
         Returns: {
