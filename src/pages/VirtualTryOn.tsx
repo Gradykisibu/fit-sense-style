@@ -218,6 +218,37 @@ export default function VirtualTryOn() {
         </div>
       ) : (
         <>
+          {/* Mannequin gender */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Mannequin</CardTitle>
+              <CardDescription>
+                Your try-on is rendered on a black mannequin matching your selected gender.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap items-center gap-3">
+              <Button
+                variant={gender === 'female' ? 'default' : 'outline'}
+                onClick={() => saveGender('female')}
+                disabled={savingGender}
+              >
+                Female
+              </Button>
+              <Button
+                variant={gender === 'male' ? 'default' : 'outline'}
+                onClick={() => saveGender('male')}
+                disabled={savingGender}
+              >
+                Male
+              </Button>
+              {!gender && (
+                <span className="text-sm text-muted-foreground">
+                  Please choose a mannequin gender before generating.
+                </span>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Closet Items Selection */}
           <Card>
             <CardHeader>
