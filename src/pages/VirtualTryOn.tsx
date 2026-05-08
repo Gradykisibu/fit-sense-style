@@ -144,6 +144,15 @@ export default function VirtualTryOn() {
       return;
     }
 
+    if (!gender) {
+      toast({
+        title: 'Choose a mannequin',
+        description: 'Pick male or female before generating your try-on.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setGenerating(true);
     try {
       const selectedClosetItems = closetItems.filter(item => selectedItems.includes(item.id));
