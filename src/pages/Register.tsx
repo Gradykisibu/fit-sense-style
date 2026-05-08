@@ -18,6 +18,7 @@ export default function Register() {
   const [phoneCode, setPhoneCode] = useState('+1');
   const [phone, setPhone] = useState('');
   const [country, setCountry] = useState('');
+  const [gender, setGender] = useState<'male' | 'female' | ''>('');
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
   const { toast } = useToast();
