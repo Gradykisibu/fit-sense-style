@@ -18,6 +18,7 @@ export default function Register() {
   const [phoneCode, setPhoneCode] = useState('+1');
   const [phone, setPhone] = useState('');
   const [country, setCountry] = useState('');
+  const [gender, setGender] = useState<'male' | 'female' | ''>('');
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
   const { toast } = useToast();
@@ -35,11 +36,20 @@ export default function Register() {
       return;
     }
 
+    if (!gender) {
+      toast({
+        title: 'Please select your gender',
+        description: 'We use this to personalize your virtual try-on mannequin.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const fullPhone = phone ? `${phoneCode} ${phone}` : undefined;
-      await register(email, password, name, country, fullPhone);
+      await register(email, password, name, country, fullPhone, gender);
       toast({ title: 'Account created!', description: 'Welcome to FitSense!' });
       navigate('/');
     } catch (error) {
@@ -132,6 +142,22 @@ export default function Register() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="gender">Gender *</Label>
+              <Select value={gender} onValueChange={(v) => setGender(v as 'male' | 'female')}>
+                <SelectTrigger id="gender">
+                  <SelectValue placeholder="Select gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Used to personalize your virtual try-on mannequin.
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

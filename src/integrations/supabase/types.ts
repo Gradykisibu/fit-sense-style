@@ -212,6 +212,7 @@ export type Database = {
           country: string | null
           created_at: string
           email: string
+          gender: string | null
           id: string
           monthly_analyses_used: number
           monthly_chats_used: number
@@ -230,6 +231,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           email: string
+          gender?: string | null
           id: string
           monthly_analyses_used?: number
           monthly_chats_used?: number
@@ -248,6 +250,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           email?: string
+          gender?: string | null
           id?: string
           monthly_analyses_used?: number
           monthly_chats_used?: number
@@ -308,6 +311,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      support_messages: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          message: string
+          reply_email: string | null
+          status: string
+          subject: string
+          user_email: string | null
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          message: string
+          reply_email?: string | null
+          status?: string
+          subject: string
+          user_email?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          message?: string
+          reply_email?: string | null
+          status?: string
+          subject?: string
+          user_email?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       trend_reports: {
         Row: {
@@ -429,6 +468,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      change_subscription_plan_dev: {
+        Args: { _plan: string }
+        Returns: undefined
+      }
       increment_analyses: {
         Args: { _user_id: string }
         Returns: {
@@ -456,19 +499,6 @@ export type Database = {
           monthly_tryons_used: number
           usage_reset_date: string
         }[]
-      }
-      change_subscription_plan_dev: {
-        Args: { _plan: string }
-        Returns: undefined
-      }
-      update_profile_safe: {
-        Args: {
-          _avatar_url?: string | null
-          _country?: string | null
-          _name?: string | null
-          _phone?: string | null
-        }
-        Returns: undefined
       }
       reset_usage_if_needed: { Args: { _user_id: string }; Returns: undefined }
     }

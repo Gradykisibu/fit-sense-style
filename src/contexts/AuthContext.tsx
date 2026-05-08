@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name?: string, country?: string, phone?: string) => Promise<void>;
+  register: (email: string, password: string, name?: string, country?: string, phone?: string, gender?: 'male' | 'female') => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
 }
@@ -56,7 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (email: string, password: string, name?: string, country?: string, phone?: string) => {
+  const register = async (email: string, password: string, name?: string, country?: string, phone?: string, gender?: 'male' | 'female') => {
     const redirectUrl = `${window.location.origin}/`;
     
     const { data, error } = await supabase.auth.signUp({
@@ -68,6 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           name: name || email.split('@')[0],
           country,
           phone,
+          gender,
         },
       },
     });
@@ -76,11 +77,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw error;
     }
 
-    // Update profile with country and phone
-    if (data.user && (country || phone)) {
+    // Update profile with country, phone, and gender
+    if (data.user && (country || phone || gender)) {
       await supabase
         .from('profiles')
-        .update({ country, phone })
+        .update({ country, phone, gender })
         .eq('id', data.user.id);
     }
   };

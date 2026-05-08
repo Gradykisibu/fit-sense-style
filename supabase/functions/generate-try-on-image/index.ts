@@ -18,12 +18,11 @@ serve(async (req) => {
   try {
     const auth = await authenticate(req);
     if (!auth.ok) return auth.response;
-    const { userId, adminClient, ip } = auth;
+    const { userId, adminClient, userClient, ip } = auth;
 
     const rl = rateLimit(userId, ip, "try-on", { limit: 3, windowMs: 60_000 });
     if (rl) { logEvent("generate-try-on-image", "rate_limited", { userId }); return rl; }
 
-    // Try-on has its own monthly counter
     const permit = await enforceUsage(adminClient, userId, "tryons");
     if (!permit.ok) { logEvent("generate-try-on-image", "blocked", { userId }); return permit.response; }
 
@@ -31,6 +30,17 @@ serve(async (req) => {
     if (!items || items.length < 2) {
       return errorResponse("bad_request", "At least 2 items are required", 400);
     }
+
+    // Read user's gender to choose the mannequin
+    const { data: profile } = await userClient
+      .from("profiles")
+      .select("gender")
+      .eq("id", userId)
+      .single();
+
+    const genderRaw = (profile?.gender || "").toLowerCase();
+    const mannequinGender: "male" | "female" =
+      genderRaw === "male" || genderRaw === "female" ? genderRaw : "female";
 
     const { data: job, error: jobError } = await adminClient
       .from("try_on_jobs")
@@ -44,24 +54,30 @@ serve(async (req) => {
 
     const itemDescriptions = items
       .map(
-        (item: any) =>
-          `${item.category}${item.color ? ` in ${item.color}` : ""}${item.brand ? ` by ${item.brand}` : ""}`,
+        (item: any, i: number) =>
+          `(${i + 1}) ${item.category}${item.color ? ` in ${item.color}` : ""}${item.brand ? ` by ${item.brand}` : ""}`,
       )
       .join(", ");
 
-    const messageContent: any[] = [
-      {
-        type: "text",
-        text: `Create a PHOTOREALISTIC fashion photograph showing these clothing items styled together on a professional fashion model or mannequin. Items to style: ${itemDescriptions}.
+    const mannequinDescription =
+      mannequinGender === "male"
+        ? "a matte BLACK MALE full-body mannequin (smooth featureless masculine form, broad shoulders, no facial features)"
+        : "a matte BLACK FEMALE full-body mannequin (smooth featureless feminine form, no facial features)";
 
-Requirements:
-- Professional fashion photography with studio lighting
-- Realistic photographic rendering (NOT illustration)
-- Clean neutral background
-- Accurate colors and textures matching provided items
-- Full body shot showing how all pieces coordinate`,
-      },
-    ];
+    const promptText = `Create a PHOTOREALISTIC studio fashion photograph showing the EXACT clothing items provided in the reference images, dressed onto ${mannequinDescription}.
+
+Items to dress (use these EXACT garments — do NOT substitute, recolor, restyle, or invent new items): ${itemDescriptions}.
+
+STRICT REQUIREMENTS:
+- Reproduce each provided garment with the SAME silhouette, color, pattern, fabric, print, logos and details as in the reference image. Do not change the design.
+- Dress every provided item on the mannequin in a coherent layered outfit (e.g., top + bottom + outerwear/footwear/accessories as applicable).
+- The figure MUST be a matte BLACK ${mannequinGender.toUpperCase()} mannequin — solid matte black plastic finish, no skin tone, no facial features, no hair.
+- Full body shot, mannequin standing centered, neutral pose.
+- Clean seamless light grey studio background, soft professional studio lighting, realistic shadows on the floor.
+- Photorealistic photography, NOT illustration, NOT 3D render style, NOT cartoon.
+- Do NOT add any extra clothing items that were not provided.`;
+
+    const messageContent: any[] = [{ type: "text", text: promptText }];
 
     for (const item of items) {
       if (item.image_url) {
@@ -110,9 +126,9 @@ Requirements:
     }
 
     await incrementUsage(adminClient, userId, "tryons");
-    logEvent("generate-try-on-image", "success", { userId });
+    logEvent("generate-try-on-image", "success", { userId, mannequinGender });
 
-    return jsonResponse({ success: true, jobId: job.id, imageUrl }, 200);
+    return jsonResponse({ success: true, jobId: job.id, imageUrl, mannequinGender }, 200);
   } catch (error: any) {
     console.error("Error:", error);
     return errorResponse("server_error", error?.message ?? "Unknown error", 500);

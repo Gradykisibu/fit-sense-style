@@ -32,7 +32,7 @@ serve(async (req) => {
     const auth = await authenticate(req);
     if (!auth.ok) return auth.response;
 
-    const { userId, userClient, ip } = auth;
+    const { userId, userClient, adminClient, ip } = auth;
     const limited = rateLimit(userId, ip, "contact-support", { limit: 3, windowMs: 60_000 });
     if (limited) {
       logEvent("contact-support", "rate_limited", { userId });
@@ -62,53 +62,64 @@ serve(async (req) => {
       .eq("id", userId)
       .single();
 
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      return errorResponse(
-        "server_error",
-        "Support email is not configured. Set RESEND_API_KEY in Supabase secrets.",
-        500,
-      );
-    }
-
-    const fromEmail = Deno.env.get("SUPPORT_FROM_EMAIL") || "onboarding@resend.dev";
-    const html = `
-      <h2>New FitSense support request</h2>
-      <p><strong>Category:</strong> ${escapeHtml(category)}</p>
-      <p><strong>Subject:</strong> ${escapeHtml(subject)}</p>
-      <p><strong>User ID:</strong> ${escapeHtml(userId)}</p>
-      <p><strong>User email:</strong> ${escapeHtml(userEmail)}</p>
-      <p><strong>Reply email:</strong> ${escapeHtml(replyEmail || userEmail)}</p>
-      <p><strong>Name:</strong> ${escapeHtml(profile?.name || "Not set")}</p>
-      <p><strong>Country:</strong> ${escapeHtml(profile?.country || "Not set")}</p>
-      <p><strong>Plan:</strong> ${escapeHtml(profile?.subscription_plan || "free")}</p>
-      <hr />
-      <p style="white-space: pre-wrap;">${escapeHtml(message)}</p>
-    `;
-
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: fromEmail,
-        to: [SUPPORT_TO_EMAIL],
-        reply_to: replyEmail && replyEmail !== "unknown" ? replyEmail : userEmail,
-        subject: `[FitSense Support] ${subject}`,
-        html,
-      }),
+    // Persist to DB so the team has a record even if email delivery is not configured
+    const { error: insertError } = await adminClient.from("support_messages").insert({
+      user_id: userId,
+      category,
+      subject,
+      message,
+      reply_email: replyEmail || null,
+      user_email: userEmail,
     });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Support email failed:", response.status, errorText);
-      return errorResponse("server_error", "Could not send support email", 500);
+    if (insertError) {
+      console.error("Failed to store support message:", insertError);
+      return errorResponse("server_error", "Could not save support message", 500);
     }
 
-    logEvent("contact-support", "sent", { userId, category });
-    return jsonResponse({ success: true }, 200);
+    // Try to send email if RESEND_API_KEY is configured; otherwise succeed silently.
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    let emailed = false;
+    if (resendApiKey) {
+      const fromEmail = Deno.env.get("SUPPORT_FROM_EMAIL") || "onboarding@resend.dev";
+      const html = `
+        <h2>New FitSense support request</h2>
+        <p><strong>Category:</strong> ${escapeHtml(category)}</p>
+        <p><strong>Subject:</strong> ${escapeHtml(subject)}</p>
+        <p><strong>User ID:</strong> ${escapeHtml(userId)}</p>
+        <p><strong>User email:</strong> ${escapeHtml(userEmail)}</p>
+        <p><strong>Reply email:</strong> ${escapeHtml(replyEmail || userEmail)}</p>
+        <p><strong>Name:</strong> ${escapeHtml(profile?.name || "Not set")}</p>
+        <p><strong>Country:</strong> ${escapeHtml(profile?.country || "Not set")}</p>
+        <p><strong>Plan:</strong> ${escapeHtml(profile?.subscription_plan || "free")}</p>
+        <hr />
+        <p style="white-space: pre-wrap;">${escapeHtml(message)}</p>
+      `;
+      try {
+        const response = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${resendApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: fromEmail,
+            to: [SUPPORT_TO_EMAIL],
+            reply_to: replyEmail && replyEmail !== "unknown" ? replyEmail : userEmail,
+            subject: `[FitSense Support] ${subject}`,
+            html,
+          }),
+        });
+        emailed = response.ok;
+        if (!response.ok) {
+          console.error("Support email failed:", response.status, await response.text());
+        }
+      } catch (e) {
+        console.error("Support email exception:", e);
+      }
+    }
+
+    logEvent("contact-support", "sent", { userId, category, emailed });
+    return jsonResponse({ success: true, emailed }, 200);
   } catch (error) {
     console.error("Error in contact-support function:", error);
     return errorResponse(

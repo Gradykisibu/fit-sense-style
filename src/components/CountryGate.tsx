@@ -34,7 +34,7 @@ export default function CountryGate({ children }: { children: React.ReactNode })
   const save = async () => {
     if (!picked) return;
     setSaving(true);
-    const { error } = await supabase.rpc('update_profile_safe', { _country: picked });
+    const { error } = await supabase.from('profiles').update({ country: picked }).eq('id', user.id);
     setSaving(false);
     if (error) { toast({ title: 'Could not save', description: error.message, variant: 'destructive' }); return; }
     setCountry(picked);

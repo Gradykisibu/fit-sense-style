@@ -33,6 +33,8 @@ export default function VirtualTryOn() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [userPlan, setUserPlan] = useState<string>('free');
+  const [gender, setGender] = useState<'male' | 'female' | null>(null);
+  const [savingGender, setSavingGender] = useState(false);
 
   useEffect(() => {
     document.title = 'Virtual Try-On Studio – FitSense';
@@ -45,10 +47,26 @@ export default function VirtualTryOn() {
     if (!user) return;
     const { data } = await supabase
       .from('profiles')
-      .select('subscription_plan')
+      .select('subscription_plan, gender')
       .eq('id', user.id)
       .single();
-    if (data) setUserPlan(data.subscription_plan);
+    if (data) {
+      setUserPlan(data.subscription_plan);
+      if (data.gender === 'male' || data.gender === 'female') setGender(data.gender);
+    }
+  };
+
+  const saveGender = async (g: 'male' | 'female') => {
+    if (!user) return;
+    setSavingGender(true);
+    const { error } = await supabase.from('profiles').update({ gender: g }).eq('id', user.id);
+    setSavingGender(false);
+    if (error) {
+      toast({ title: 'Could not save', description: error.message, variant: 'destructive' });
+      return;
+    }
+    setGender(g);
+    toast({ title: 'Mannequin gender updated' });
   };
 
   const fetchClosetItems = async () => {
@@ -121,6 +139,15 @@ export default function VirtualTryOn() {
       toast({
         title: 'Select at least 2 items',
         description: 'You need to select at least 2 clothing items to generate a try-on visualization.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (!gender) {
+      toast({
+        title: 'Choose a mannequin',
+        description: 'Pick male or female before generating your try-on.',
         variant: 'destructive'
       });
       return;
@@ -200,6 +227,37 @@ export default function VirtualTryOn() {
         </div>
       ) : (
         <>
+          {/* Mannequin gender */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Mannequin</CardTitle>
+              <CardDescription>
+                Your try-on is rendered on a black mannequin matching your selected gender.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap items-center gap-3">
+              <Button
+                variant={gender === 'female' ? 'default' : 'outline'}
+                onClick={() => saveGender('female')}
+                disabled={savingGender}
+              >
+                Female
+              </Button>
+              <Button
+                variant={gender === 'male' ? 'default' : 'outline'}
+                onClick={() => saveGender('male')}
+                disabled={savingGender}
+              >
+                Male
+              </Button>
+              {!gender && (
+                <span className="text-sm text-muted-foreground">
+                  Please choose a mannequin gender before generating.
+                </span>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Closet Items Selection */}
           <Card>
             <CardHeader>
