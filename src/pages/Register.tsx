@@ -144,6 +144,22 @@ export default function Register() {
               </div>
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="gender">Gender *</Label>
+              <Select value={gender} onValueChange={(v) => setGender(v as 'male' | 'female')}>
+                <SelectTrigger id="gender">
+                  <SelectValue placeholder="Select gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Used to personalize your virtual try-on mannequin.
+              </p>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="password">Password *</Label>
