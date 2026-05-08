@@ -133,6 +133,36 @@ export async function editOutfitImage(params: {
   return res.json();
 }
 
+export async function sendSupportMessage(params: {
+  category: string;
+  subject: string;
+  message: string;
+  replyEmail?: string;
+}): Promise<void> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
+  const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/contact-support`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(params),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    const message =
+      error?.error?.message ||
+      error?.message ||
+      (res.status === 404
+        ? 'Support function is not deployed yet.'
+        : 'Failed to send support message');
+    throw new Error(message);
+  }
+}
+
 export async function testConnection(): Promise<boolean> {
   try {
     await getCloset();

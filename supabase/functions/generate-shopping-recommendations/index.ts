@@ -8,7 +8,6 @@ import {
   jsonResponse,
   logEvent,
   rateLimit,
-  requirePlan,
 } from "../_shared/usage.ts";
 
 serve(async (req) => {
@@ -23,9 +22,6 @@ serve(async (req) => {
 
     const rl = rateLimit(userId, ip, "shopping", { limit: 3, windowMs: 60_000 });
     if (rl) { logEvent("generate-shopping-recommendations", "rate_limited", { userId }); return rl; }
-
-    const planCheck = await requirePlan(adminClient, userId, ["pro"]);
-    if (!planCheck.ok) return planCheck.response;
 
     const permit = await enforceUsage(adminClient, userId, "shopping");
     if (!permit.ok) { logEvent("generate-shopping-recommendations", "blocked", { userId }); return permit.response; }

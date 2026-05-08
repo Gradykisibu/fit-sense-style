@@ -14,19 +14,9 @@ export interface PricingPlan {
 const currencyRates: Record<string, number> = {
   USD: 1,
   GBP: 0.79,
-  EUR: 0.92,
   CAD: 1.36,
-  AUD: 1.52,
-  INR: 83.12,
-  JPY: 149.50,
-  CNY: 7.24,
-  BRL: 4.97,
-  MXN: 17.15,
+  EUR: 0.92,
   ZAR: 18.65,
-  NGN: 1505.50,
-  KES: 129.50,
-  SGD: 1.34,
-  AED: 3.67,
 };
 
 export const basePlans: PricingPlan[] = [
@@ -37,7 +27,8 @@ export const basePlans: PricingPlan[] = [
     description: "Perfect for getting started with AI fashion advice",
     features: [
       "50 outfit analyses per month",
-      "50 AI chat messages per month",
+      "100 AI chat messages per month",
+      "10 virtual try-ons per month",
       "Basic style feedback",
       "Limited closet storage (25 items)",
       "Standard support"
@@ -52,11 +43,12 @@ export const basePlans: PricingPlan[] = [
     description: "Most popular choice for fashion enthusiasts",
     features: [
       "200 outfit analyses per month",
-      "200 AI chat messages per month",
+      "500 AI chat messages per month",
+      "50 virtual try-ons per month",
+      "20 shopping reports per month",
       "Advanced style recommendations",
       "Unlimited closet storage",
-      "Priority support",
-      "Seasonal trend reports"
+      "Priority support"
     ],
     buttonText: "Go Premium",
     popular: true
@@ -67,11 +59,13 @@ export const basePlans: PricingPlan[] = [
     period: "/month",
     description: "Complete solution for style professionals and influencers",
     features: [
-      "500 outfit analyses per month",
-      "Unlimited AI chat messages",
+      "1000 outfit analyses per month",
+      "2000 AI chat messages per month",
+      "200 virtual try-ons per month",
+      "200 shopping reports per month",
       "Personal AI stylist assistant",
+      "Smart Shopping Assistant",
       "Custom style analytics",
-      "Priority support",
       "24/7 premium support",
       "Early access to new features"
     ],

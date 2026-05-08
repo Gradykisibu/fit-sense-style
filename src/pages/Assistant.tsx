@@ -151,11 +151,13 @@ export default function Assistant() {
 
       if (uploadError) throw uploadError;
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from('closet-items').getPublicUrl(fileName);
+      const { data: signed, error: signedError } = await supabase.storage
+        .from('closet-items')
+        .createSignedUrl(fileName, 60 * 60);
 
-      setSelectedImage(publicUrl);
+      if (signedError || !signed) throw signedError || new Error('Could not create signed image URL');
+
+      setSelectedImage(signed.signedUrl);
       toast({
         title: 'Image uploaded',
         description: 'Image ready to analyze',
@@ -400,12 +402,6 @@ export default function Assistant() {
 
       // Save final assistant message
       await saveMessage(conversationId, 'assistant', assistantContent);
-      
-      // Update usage count
-      await supabase
-        .from('profiles')
-        .update({ monthly_chats_used: (usageInfo?.monthly_chats_used || 0) + 1 })
-        .eq('id', user?.id!);
       
       fetchUserUsage();
       loadConversations();

@@ -27,6 +27,7 @@ export default function Pricing() {
   const [currentPlan, setCurrentPlan] = useState<string>('free');
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [changingPlan, setChangingPlan] = useState(false);
 
   useEffect(() => {
     document.title = 'Pricing – FitSense';
@@ -66,35 +67,26 @@ export default function Pricing() {
   const confirmPlanChange = async () => {
     if (!user || !selectedPlan) return;
 
+    setChangingPlan(true);
     try {
-      const nextResetDate = new Date();
-      nextResetDate.setMonth(nextResetDate.getMonth() + 1);
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          subscription_plan: selectedPlan,
-          subscription_start_date: new Date().toISOString(),
-          monthly_analyses_used: 0,
-          monthly_chats_used: 0,
-          usage_reset_date: nextResetDate.toISOString()
-        })
-        .eq('id', user.id);
-
+      const { error } = await supabase.rpc('change_subscription_plan_dev', { _plan: selectedPlan });
       if (error) throw error;
 
       setCurrentPlan(selectedPlan);
       toast({
-        title: 'Plan updated!',
-        description: `You're now on the ${selectedPlan} plan.`,
+        title: 'Plan changed',
+        description: `You are now on the ${selectedPlan} plan. Usage counters were reset.`,
       });
       setShowConfirmDialog(false);
+      setSelectedPlan(null);
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive'
+        title: 'Could not change plan',
+        description: error?.message || 'Please try again.',
+        variant: 'destructive',
       });
+    } finally {
+      setChangingPlan(false);
     }
   };
 
@@ -209,8 +201,10 @@ export default function Pricing() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmPlanChange}>Confirm</AlertDialogAction>
+            <AlertDialogCancel disabled={changingPlan}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmPlanChange} disabled={changingPlan}>
+              {changingPlan ? 'Changing...' : 'Confirm'}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

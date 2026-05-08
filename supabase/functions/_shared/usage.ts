@@ -1,15 +1,14 @@
 // Shared helpers for AI edge functions:
 // - auth (JWT validation)
+// - country/account gating
 // - subscription plan + per-feature usage enforcement
-// - country gating (ZA / US / GB / CA only)
-// - basic in-memory per-user/per-IP rate limiting (NOTE: replace with Redis/Upstash in prod)
+// - temporary in-memory rate limiting
 
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 export const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 export type UsageType = "analyses" | "chats" | "tryons" | "shopping";
@@ -19,22 +18,14 @@ export const PLAN_LIMITS: Record<
   Plan,
   { analyses: number; chats: number; tryons: number; shopping: number }
 > = {
-  free:    { analyses: 5,    chats: 10,   tryons: 1,   shopping: 0 },
-  basic:   { analyses: 50,   chats: 100,  tryons: 10,  shopping: 0 },
-  premium: { analyses: 200,  chats: 500,  tryons: 50,  shopping: 20 },
-  pro:     { analyses: 1000, chats: 2000, tryons: 200, shopping: 200 },
+  free: { analyses: 5, chats: 10, tryons: 1, shopping: 0 },
+  basic: { analyses: 50, chats: 100, tryons: 10, shopping: 0 },
+  premium: { analyses: 200, chats: 500, tryons: 50, shopping: 20 },
+  pro: { analyses: 1000, chats: 2000, tryons: 200, shopping: 200 },
 };
 
-// Single source of truth for supported countries (ISO-3166 alpha-2)
-export const SUPPORTED_COUNTRIES = ["ZA", "US", "GB", "CA"] as const;
+export const SUPPORTED_COUNTRIES = ["ZA", "US", "GB", "CA", "FR"] as const;
 export type SupportedCountry = typeof SUPPORTED_COUNTRIES[number];
-
-export function jsonResponse(body: unknown, status: number) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
 
 export type ErrorCode =
   | "unauthorized"
@@ -46,6 +37,13 @@ export type ErrorCode =
   | "bad_request"
   | "server_error";
 
+export function jsonResponse(body: unknown, status: number) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
 export function errorResponse(
   code: ErrorCode,
   message: string,
@@ -55,9 +53,6 @@ export function errorResponse(
   return jsonResponse({ error: { code, message, ...extra } }, status);
 }
 
-/**
- * Authenticate the request via JWT; returns clients + userId.
- */
 export async function authenticate(req: Request): Promise<
   | {
       ok: true;
@@ -103,45 +98,35 @@ export async function authenticate(req: Request): Promise<
   return { ok: true, userId: data.user.id, userClient, adminClient, authHeader, ip };
 }
 
-// ---------------- Rate limiting (in-memory token bucket) ----------------
-// NOTE: This is per-edge-instance only. For production with multiple
-// instances or strict abuse protection, replace with Upstash/Redis.
-
+// Temporary in-memory rate limiting. This is per edge-function instance only;
+// production abuse protection should move to Cloudflare rules or Redis/Upstash.
 type Bucket = { count: number; resetAt: number };
 const buckets = new Map<string, Bucket>();
 
 export interface RateLimitOptions {
-  /** Max requests per window. */
   limit: number;
-  /** Window length in ms. */
   windowMs: number;
 }
 
 function takeToken(key: string, opts: RateLimitOptions): boolean {
   const now = Date.now();
-  const b = buckets.get(key);
-  if (!b || now > b.resetAt) {
+  const bucket = buckets.get(key);
+  if (!bucket || now > bucket.resetAt) {
     buckets.set(key, { count: 1, resetAt: now + opts.windowMs });
     return true;
   }
-  if (b.count >= opts.limit) return false;
-  b.count++;
+  if (bucket.count >= opts.limit) return false;
+  bucket.count += 1;
   return true;
 }
 
-/**
- * Rate-limit by user id and (separately) by IP. Returns a 429 Response when
- * the caller exceeds either limit. Pass per-feature options.
- */
 export function rateLimit(
   userId: string,
   ip: string,
   feature: string,
   opts: RateLimitOptions = { limit: 10, windowMs: 60_000 },
 ): Response | null {
-  const userKey = `u:${feature}:${userId}`;
-  const ipKey = `ip:${feature}:${ip}`;
-  if (!takeToken(userKey, opts) || !takeToken(ipKey, opts)) {
+  if (!takeToken(`u:${feature}:${userId}`, opts) || !takeToken(`ip:${feature}:${ip}`, opts)) {
     return errorResponse(
       "rate_limited",
       "Too many requests. Please slow down and try again in a minute.",
@@ -151,8 +136,6 @@ export function rateLimit(
   }
   return null;
 }
-
-// ---------------- Country + account gating + plan enforcement ----------------
 
 interface ProfileRow {
   subscription_plan: string;
@@ -183,12 +166,12 @@ async function loadProfile(
       response: errorResponse("server_error", "Could not load user profile", 500),
     };
   }
+
   return { ok: true, profile: data as ProfileRow };
 }
 
-/** Block users whose account_status is not 'active'. */
 function checkAccount(profile: ProfileRow): Response | null {
-  if (profile.account_status && profile.account_status !== "active") {
+  if ((profile.account_status || "active") !== "active") {
     return errorResponse(
       "account_blocked",
       "Your account is not active. Please contact support.",
@@ -198,10 +181,9 @@ function checkAccount(profile: ProfileRow): Response | null {
   return null;
 }
 
-/** Block users whose country is not supported (ZA, US, GB, CA). */
 function checkCountry(profile: ProfileRow): Response | null {
-  const c = (profile.country || "").toUpperCase();
-  if (!c) {
+  const country = (profile.country || "").toUpperCase();
+  if (!country) {
     return errorResponse(
       "country_blocked",
       "Please set your country in Settings to continue.",
@@ -209,56 +191,45 @@ function checkCountry(profile: ProfileRow): Response | null {
       { supported: SUPPORTED_COUNTRIES },
     );
   }
-  if (!SUPPORTED_COUNTRIES.includes(c as SupportedCountry)) {
+  if (!SUPPORTED_COUNTRIES.includes(country as SupportedCountry)) {
     return errorResponse(
       "country_blocked",
       "FitSense Style is not yet available in your country.",
       403,
-      { supported: SUPPORTED_COUNTRIES, country: c },
+      { supported: SUPPORTED_COUNTRIES, country },
     );
   }
   return null;
 }
 
-/**
- * Enforce subscription plan + monthly usage limit for the given feature.
- * Auto-resets counters when usage_reset_date has elapsed.
- * Also enforces country and account_status.
- *
- * Does NOT increment usage. Caller must call `incrementUsage` after success.
- */
 export async function enforceUsage(
   adminClient: SupabaseClient,
   userId: string,
   type: UsageType,
 ): Promise<
-  | { ok: true; plan: Plan; used: number; limit: number; country: string }
+  | { ok: true; plan: Plan; used: number; limit: number; country: SupportedCountry }
   | { ok: false; response: Response }
 > {
-  // Auto-reset if needed (atomic, server-side).
   await adminClient.rpc("reset_usage_if_needed", { _user_id: userId });
 
   const loaded = await loadProfile(adminClient, userId);
   if (!loaded.ok) return loaded;
-  const profile = loaded.profile;
 
-  const accountErr = checkAccount(profile);
-  if (accountErr) return { ok: false, response: accountErr };
+  const accountError = checkAccount(loaded.profile);
+  if (accountError) return { ok: false, response: accountError };
 
-  const countryErr = checkCountry(profile);
-  if (countryErr) return { ok: false, response: countryErr };
+  const countryError = checkCountry(loaded.profile);
+  if (countryError) return { ok: false, response: countryError };
 
-  const plan: Plan = (PLAN_LIMITS[profile.subscription_plan as Plan]
-    ? (profile.subscription_plan as Plan)
-    : "free");
-  const limits = PLAN_LIMITS[plan];
-  const limit = limits[type];
-
+  const plan: Plan = PLAN_LIMITS[loaded.profile.subscription_plan as Plan]
+    ? (loaded.profile.subscription_plan as Plan)
+    : "free";
+  const limit = PLAN_LIMITS[plan][type];
   const usedMap: Record<UsageType, number> = {
-    analyses: profile.monthly_analyses_used ?? 0,
-    chats: profile.monthly_chats_used ?? 0,
-    tryons: profile.monthly_tryons_used ?? 0,
-    shopping: profile.monthly_shopping_used ?? 0,
+    analyses: loaded.profile.monthly_analyses_used ?? 0,
+    chats: loaded.profile.monthly_chats_used ?? 0,
+    tryons: loaded.profile.monthly_tryons_used ?? 0,
+    shopping: loaded.profile.monthly_shopping_used ?? 0,
   };
   const used = usedMap[type];
 
@@ -281,15 +252,20 @@ export async function enforceUsage(
         "limit_reached",
         `Monthly ${type} limit reached on the ${plan} plan (${used}/${limit}). Upgrade to continue.`,
         403,
-        { plan, used, limit, type, resetAt: profile.usage_reset_date },
+        { plan, used, limit, type, resetAt: loaded.profile.usage_reset_date },
       ),
     };
   }
 
-  return { ok: true, plan, used, limit, country: (profile.country || "").toUpperCase() };
+  return {
+    ok: true,
+    plan,
+    used,
+    limit,
+    country: loaded.profile.country!.toUpperCase() as SupportedCountry,
+  };
 }
 
-/** Atomically bump the right monthly counter. Call ONLY after AI success. */
 export async function incrementUsage(
   adminClient: SupabaseClient,
   userId: string,
@@ -299,17 +275,17 @@ export async function incrementUsage(
     type === "analyses"
       ? "increment_analyses"
       : type === "chats"
-      ? "increment_chats"
-      : type === "tryons"
-      ? "increment_tryons"
-      : "increment_shopping";
+        ? "increment_chats"
+        : type === "tryons"
+          ? "increment_tryons"
+          : "increment_shopping";
+
   const { error } = await adminClient.rpc(fn, { _user_id: userId });
   if (error) {
     console.error(`Failed to increment ${type} usage for ${userId}:`, error);
   }
 }
 
-/** Require minimum plan tier for plan-gated features. */
 export async function requirePlan(
   adminClient: SupabaseClient,
   userId: string,
@@ -328,7 +304,9 @@ export async function requirePlan(
     };
   }
 
-  const plan = profile.subscription_plan as Plan;
+  const plan = PLAN_LIMITS[profile.subscription_plan as Plan]
+    ? (profile.subscription_plan as Plan)
+    : "free";
   if (!allowed.includes(plan)) {
     return {
       ok: false,
@@ -340,18 +318,14 @@ export async function requirePlan(
       ),
     };
   }
+
   return { ok: true, plan };
 }
 
-/** Safe structured event log (no PII / no images). */
-export function logEvent(
-  fn: string,
-  event: string,
-  meta: Record<string, unknown> = {},
-) {
+export function logEvent(fn: string, event: string, meta: Record<string, unknown> = {}) {
   try {
     console.log(JSON.stringify({ fn, event, ts: new Date().toISOString(), ...meta }));
   } catch {
-    /* no-op */
+    // no-op
   }
 }

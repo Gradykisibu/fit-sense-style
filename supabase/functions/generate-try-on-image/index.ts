@@ -8,7 +8,6 @@ import {
   jsonResponse,
   logEvent,
   rateLimit,
-  requirePlan,
 } from "../_shared/usage.ts";
 
 serve(async (req) => {
@@ -23,9 +22,6 @@ serve(async (req) => {
 
     const rl = rateLimit(userId, ip, "try-on", { limit: 3, windowMs: 60_000 });
     if (rl) { logEvent("generate-try-on-image", "rate_limited", { userId }); return rl; }
-
-    const planCheck = await requirePlan(adminClient, userId, ["premium", "pro"]);
-    if (!planCheck.ok) return planCheck.response;
 
     // Try-on has its own monthly counter
     const permit = await enforceUsage(adminClient, userId, "tryons");

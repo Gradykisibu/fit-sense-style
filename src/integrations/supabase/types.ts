@@ -457,6 +457,19 @@ export type Database = {
           usage_reset_date: string
         }[]
       }
+      change_subscription_plan_dev: {
+        Args: { _plan: string }
+        Returns: undefined
+      }
+      update_profile_safe: {
+        Args: {
+          _avatar_url?: string | null
+          _country?: string | null
+          _name?: string | null
+          _phone?: string | null
+        }
+        Returns: undefined
+      }
       reset_usage_if_needed: { Args: { _user_id: string }; Returns: undefined }
     }
     Enums: {

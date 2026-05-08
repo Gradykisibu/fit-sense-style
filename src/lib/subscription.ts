@@ -75,8 +75,8 @@ export function hasFeatureAccess(feature: string, userPlan: SubscriptionPlan): b
   const userPlanIndex = planHierarchy.indexOf(userPlan);
 
   const featureRequirements: Record<string, number> = {
-    'virtual-try-on': 2,
-    'shopping-assistant': 3,
+    'virtual-try-on': 1,
+    'shopping-assistant': 2,
     'custom-analytics': 3,
     'unlimited-chats': 3,
     'advanced-recommendations': 2,

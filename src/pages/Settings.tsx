@@ -132,30 +132,35 @@ export default function Settings() {
       </Card>
 
       {/* API Configuration Card */}
-      <Card>
-        <CardHeader><CardTitle>API Configuration</CardTitle></CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="base">API Base URL</Label>
-            <Input id="base" placeholder="https://api.example.com" value={form.apiBaseUrl} onChange={(e) => setForm((f) => ({ ...f, apiBaseUrl: e.target.value }))} />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="key">API Key</Label>
-            <Input id="key" placeholder="paste key" value={form.apiKey} onChange={(e) => setForm((f) => ({ ...f, apiKey: e.target.value }))} />
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="font-medium">Mock Mode</div>
-              <div className="text-sm text-muted-foreground">Return example payloads with latency</div>
-            </div>
-            <Switch checked={form.mockMode} onCheckedChange={(v) => setForm((f) => ({ ...f, mockMode: v }))} />
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={save}>Save</Button>
-            <Button variant="secondary" onClick={onTest}>Test Connection</Button>
-          </div>
-        </CardContent>
-      </Card>
+      {
+        profile?.email === "Kisibugrady3980@gmail.com" ? null : (
+          <Card>
+            <CardHeader><CardTitle>API Configuration</CardTitle></CardHeader>
+            <CardContent className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="base">API Base URL</Label>
+                <Input id="base" placeholder="https://api.example.com" value={form.apiBaseUrl} onChange={(e) => setForm((f) => ({ ...f, apiBaseUrl: e.target.value }))} />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="key">API Key</Label>
+                <Input id="key" placeholder="paste key" value={form.apiKey} onChange={(e) => setForm((f) => ({ ...f, apiKey: e.target.value }))} />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium">Mock Mode</div>
+                  <div className="text-sm text-muted-foreground">Return example payloads with latency</div>
+                </div>
+                <Switch checked={form.mockMode} onCheckedChange={(v) => setForm((f) => ({ ...f, mockMode: v }))} />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={save}>Save</Button>
+                <Button variant="secondary" onClick={onTest}>Test Connection</Button>
+              </div>
+            </CardContent>
+          </Card>
+
+        )
+      }
     </main>
   );
 }
