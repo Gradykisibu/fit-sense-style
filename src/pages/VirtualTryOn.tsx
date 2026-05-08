@@ -33,6 +33,8 @@ export default function VirtualTryOn() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [userPlan, setUserPlan] = useState<string>('free');
+  const [gender, setGender] = useState<'male' | 'female' | null>(null);
+  const [savingGender, setSavingGender] = useState(false);
 
   useEffect(() => {
     document.title = 'Virtual Try-On Studio – FitSense';
@@ -45,10 +47,26 @@ export default function VirtualTryOn() {
     if (!user) return;
     const { data } = await supabase
       .from('profiles')
-      .select('subscription_plan')
+      .select('subscription_plan, gender')
       .eq('id', user.id)
       .single();
-    if (data) setUserPlan(data.subscription_plan);
+    if (data) {
+      setUserPlan(data.subscription_plan);
+      if (data.gender === 'male' || data.gender === 'female') setGender(data.gender);
+    }
+  };
+
+  const saveGender = async (g: 'male' | 'female') => {
+    if (!user) return;
+    setSavingGender(true);
+    const { error } = await supabase.from('profiles').update({ gender: g }).eq('id', user.id);
+    setSavingGender(false);
+    if (error) {
+      toast({ title: 'Could not save', description: error.message, variant: 'destructive' });
+      return;
+    }
+    setGender(g);
+    toast({ title: 'Mannequin gender updated' });
   };
 
   const fetchClosetItems = async () => {
