@@ -17,3 +17,6 @@ verify_jwt = true
 
 [functions.edit-outfit-image]
 verify_jwt = true
+
+[functions.contact-support]
+verify_jwt = true

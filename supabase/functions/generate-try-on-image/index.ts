@@ -6,12 +6,8 @@ import {
   errorResponse,
   incrementUsage,
   jsonResponse,
-<<<<<<< HEAD
-=======
   logEvent,
   rateLimit,
->>>>>>> f2c68d17d64688b57b4d0002fa165edec2e20d0d
-  requirePlan,
 } from "../_shared/usage.ts";
 
 serve(async (req) => {
@@ -22,29 +18,14 @@ serve(async (req) => {
   try {
     const auth = await authenticate(req);
     if (!auth.ok) return auth.response;
-<<<<<<< HEAD
-    const { userId, adminClient } = auth;
-
-    // Plan gate: Premium or Pro only
-    const planCheck = await requirePlan(adminClient, userId, ["premium", "pro"]);
-    if (!planCheck.ok) return planCheck.response;
-
-    // Try-on counts toward analyses quota
-    const permit = await enforceUsage(adminClient, userId, "analyses");
-    if (!permit.ok) return permit.response;
-=======
     const { userId, adminClient, ip } = auth;
 
     const rl = rateLimit(userId, ip, "try-on", { limit: 3, windowMs: 60_000 });
     if (rl) { logEvent("generate-try-on-image", "rate_limited", { userId }); return rl; }
 
-    const planCheck = await requirePlan(adminClient, userId, ["premium", "pro"]);
-    if (!planCheck.ok) return planCheck.response;
-
     // Try-on has its own monthly counter
     const permit = await enforceUsage(adminClient, userId, "tryons");
     if (!permit.ok) { logEvent("generate-try-on-image", "blocked", { userId }); return permit.response; }
->>>>>>> f2c68d17d64688b57b4d0002fa165edec2e20d0d
 
     const { items } = await req.json();
     if (!items || items.length < 2) {
@@ -128,12 +109,8 @@ Requirements:
       return errorResponse("server_error", "Could not save result", 500);
     }
 
-<<<<<<< HEAD
-    await incrementUsage(adminClient, userId, "analyses");
-=======
     await incrementUsage(adminClient, userId, "tryons");
     logEvent("generate-try-on-image", "success", { userId });
->>>>>>> f2c68d17d64688b57b4d0002fa165edec2e20d0d
 
     return jsonResponse({ success: true, jobId: job.id, imageUrl }, 200);
   } catch (error: any) {
