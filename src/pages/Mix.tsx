@@ -55,6 +55,48 @@ export default function Mix() {
     }
   };
 
+  const onAiPickFromCloset = async () => {
+    if (!result?.suggestedSwaps?.length) return;
+    setAiPicking(true);
+    setAiPick(null);
+    try {
+      const requests: RequestedClosetItem[] = result.suggestedSwaps
+        .map((s: any) => parseSuggestion(typeof s === 'string' ? s : s.suggestion || ''))
+        .filter(Boolean) as RequestedClosetItem[];
+
+      if (!requests.length) {
+        toast({ title: 'Nothing to match', description: "Couldn't read clothing items from the suggestions." });
+        return;
+      }
+
+      const closet = await getCloset();
+      if (!closet.length) {
+        toast({
+          title: 'Your closet is empty',
+          description: 'Add items first so AI can build outfits from your wardrobe.',
+        });
+        setAiPick({ matched: [], missing: requests });
+        return;
+      }
+
+      const match = matchRequestsToCloset(requests, closet);
+      setAiPick(match);
+
+      if (match.missing.length === 0) {
+        toast({ title: 'Outfit ready', description: `Picked ${match.matched.length} item(s) from your closet.` });
+      } else {
+        toast({
+          title: 'Some items missing',
+          description: `Missing: ${match.missing.map((m) => m.name).join(', ')}`,
+        });
+      }
+    } catch (e: any) {
+      toast({ title: 'Could not pick from closet', description: e?.message || 'Please try again.' });
+    } finally {
+      setAiPicking(false);
+    }
+  };
+
   return (
     <main className="container mx-auto px-6 py-8 space-y-6">
       <div className="flex items-center justify-between">
