@@ -30,6 +30,8 @@ export default function Mix() {
   const [files, setFiles] = useState<Record<SlotKey, { file: File; url: string } | undefined>>({} as any);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any | null>(null);
+  const [aiPicking, setAiPicking] = useState(false);
+  const [aiPick, setAiPick] = useState<ClosetMatchResult | null>(null);
   const { toast } = useToast();
 
   const canAnalyze = useMemo(() => ['top', 'bottom', 'shoes'].every((k) => !!files[k as SlotKey]), [files]);
