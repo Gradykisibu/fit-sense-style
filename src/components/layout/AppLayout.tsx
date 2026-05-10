@@ -1,4 +1,4 @@
-import { NavLink, Outlet, Link } from "react-router-dom";
+import { NavLink, Outlet, Link, useNavigate } from "react-router-dom";
 import { Camera, Shuffle, Shirt, Settings as SettingsIcon, House, Sparkles, LogOut, Menu, CreditCard, Save, ShoppingBag, BarChart3, Lock, LifeBuoy } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
