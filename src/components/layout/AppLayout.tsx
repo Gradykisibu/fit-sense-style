@@ -103,7 +103,7 @@ export default function AppLayout() {
                 </SheetTrigger>
                 <SheetContent side="right" className="w-64">
                   <nav className="flex flex-col gap-4 mt-8">
-                    {tabs.map(({ to, label, icon: Icon, premiumFeature }) => {
+                    {mobileTabs.map(({ to, label, icon: Icon, premiumFeature }) => {
                       const hasAccess = !premiumFeature || hasFeatureAccess(premiumFeature, userPlan as any);
                       return (
                         <NavLink
