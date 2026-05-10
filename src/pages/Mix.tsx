@@ -140,8 +140,15 @@ export default function Mix() {
           </Card>
           {result.suggestedSwaps && result.suggestedSwaps.length > 0 && (
             <Card>
-              <CardHeader><CardTitle>Suggested Swaps</CardTitle></CardHeader>
-              <CardContent>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between gap-2">
+                  <span>Suggested Swaps</span>
+                  <Button size="sm" onClick={onAiPickFromCloset} disabled={aiPicking}>
+                    {aiPicking ? 'Checking closet…' : 'Let AI pick from my closet'}
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <ul className="space-y-2">
                   {result.suggestedSwaps.map((swap: any, idx: number) => (
                     <li key={idx} className="text-sm">
@@ -149,6 +156,42 @@ export default function Mix() {
                     </li>
                   ))}
                 </ul>
+
+                {aiPick && aiPick.matched.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold">AI-picked from your closet</h3>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {aiPick.matched.map((m) => (
+                        <div key={m.closetItem.id} className="space-y-1">
+                          <ClosetItemCard item={m.closetItem} />
+                          <p className="text-xs text-muted-foreground px-1">{m.matchReason}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {aiPick && aiPick.missing.length > 0 && (
+                  <div className="space-y-2 rounded-md border border-dashed p-4">
+                    <h3 className="text-sm font-semibold">Items to add to your closet</h3>
+                    <p className="text-sm text-muted-foreground">
+                      I couldn't complete this outfit because your closet is missing:{' '}
+                      {aiPick.missing.map((m) => m.name).join(', ')}.
+                    </p>
+                    <ul className="text-sm space-y-1 list-disc pl-5">
+                      {aiPick.missing.map((m, i) => (
+                        <li key={i}>
+                          <span className="font-medium capitalize">{m.name}</span>
+                          <span className="text-muted-foreground"> — {m.category}{m.color ? `, ${m.color}` : ''}</span>
+                          {m.reason && <div className="text-xs text-muted-foreground">Why: {m.reason}</div>}
+                        </li>
+                      ))}
+                    </ul>
+                    <Button asChild size="sm" variant="secondary">
+                      <Link to="/closet">Add missing items to closet</Link>
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
