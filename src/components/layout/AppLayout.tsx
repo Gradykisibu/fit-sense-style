@@ -1,4 +1,4 @@
-import { NavLink, Outlet, Link } from "react-router-dom";
+import { NavLink, Outlet, Link, useNavigate } from "react-router-dom";
 import { Camera, Shuffle, Shirt, Settings as SettingsIcon, House, Sparkles, LogOut, Menu, CreditCard, Save, ShoppingBag, BarChart3, Lock, LifeBuoy } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
@@ -34,10 +34,15 @@ const tabs: TabItem[] = [
   { to: "/shopping", label: "Shopping", icon: ShoppingBag, premiumFeature: "shopping-assistant" },
   { to: "/analytics", label: "Analytics", icon: BarChart3, premiumFeature: "custom-analytics" },
   { to: "/snapshots", label: "Snapshots", icon: Save },
+];
+
+const accountTabs: TabItem[] = [
   { to: "/pricing", label: "Pricing", icon: CreditCard },
   { to: "/support", label: "Support", icon: LifeBuoy },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ];
+
+const mobileTabs: TabItem[] = [...tabs, ...accountTabs];
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
@@ -98,7 +103,7 @@ export default function AppLayout() {
                 </SheetTrigger>
                 <SheetContent side="right" className="w-64">
                   <nav className="flex flex-col gap-4 mt-8">
-                    {tabs.map(({ to, label, icon: Icon, premiumFeature }) => {
+                    {mobileTabs.map(({ to, label, icon: Icon, premiumFeature }) => {
                       const hasAccess = !premiumFeature || hasFeatureAccess(premiumFeature, userPlan as any);
                       return (
                         <NavLink
@@ -164,6 +169,15 @@ export default function AppLayout() {
                       </p>
                     </div>
                   </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {accountTabs.map(({ to, label, icon: Icon }) => (
+                    <DropdownMenuItem key={to} asChild className="cursor-pointer">
+                      <Link to={to}>
+                        <Icon className="mr-2 h-4 w-4" />
+                        <span>{label}</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="cursor-pointer text-destructive">
                     <LogOut className="mr-2 h-4 w-4" />
