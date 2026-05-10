@@ -1,16 +1,6 @@
-import { AppSettings, ClothingCategory, ClothingItem, OutfitAnalysis, OutfitSuggestion, TryOnJob, getSettings } from "./settings";
+import { ClothingCategory, ClothingItem, OutfitAnalysis } from "./settings";
 import { supabase } from "@/integrations/supabase/client";
-
-function sleep(ms: number) {
-  return new Promise((res) => setTimeout(res, ms));
-}
-
-function headers(settings: AppSettings) {
-  return {
-    'Content-Type': 'application/json',
-    'x-api-key': settings.apiKey || '',
-  };
-}
+import { describeApiError } from "./subscription";
 
 export async function analyzeOutfitImage(file: File): Promise<OutfitAnalysis> {
   const { data: { session } } = await supabase.auth.getSession();
@@ -28,8 +18,8 @@ export async function analyzeOutfitImage(file: File): Promise<OutfitAnalysis> {
   });
 
   if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.error || 'Failed to analyze outfit image');
+    const error = await res.json().catch(() => ({}));
+    throw new Error(describeApiError(error));
   }
   
   return res.json();
@@ -49,8 +39,8 @@ export async function analyzeItems(items: { imageUrl: string; category: string }
   });
 
   if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.error || 'Failed to analyze items');
+    const error = await res.json().catch(() => ({}));
+    throw new Error(describeApiError(error));
   }
   
   return res.json();
@@ -108,6 +98,38 @@ export async function deleteClosetItem(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function clearCloset(): Promise<{ deletedCount: number }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data: rows, error: loadError } = await supabase
+    .from('closet_items')
+    .select('id, image_url')
+    .eq('user_id', user.id);
+
+  if (loadError) throw loadError;
+
+  const storagePaths = (rows || [])
+    .map((row) => row.image_url)
+    .filter((path): path is string => typeof path === 'string' && path.startsWith(`${user.id}/`));
+
+  if (storagePaths.length > 0) {
+    const { error: storageError } = await supabase.storage
+      .from('closet-items')
+      .remove(storagePaths);
+    if (storageError) throw storageError;
+  }
+
+  const { error: deleteError } = await supabase
+    .from('closet_items')
+    .delete()
+    .eq('user_id', user.id);
+
+  if (deleteError) throw deleteError;
+
+  return { deletedCount: rows?.length || 0 };
+}
+
 
 export async function editOutfitImage(params: {
   imageUrl: string;
@@ -128,9 +150,21 @@ export async function editOutfitImage(params: {
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({}));
-    throw new Error(error?.error?.message || error?.error || 'Failed to edit outfit image');
+    throw new Error(describeApiError(error));
   }
   return res.json();
+}
+
+export async function getFunctionErrorMessage(error: any): Promise<string> {
+  const response = error?.context;
+  if (response && typeof response.json === 'function') {
+    try {
+      return describeApiError(await response.json());
+    } catch {
+      // fall through
+    }
+  }
+  return describeApiError(error);
 }
 
 export async function sendSupportMessage(params: {

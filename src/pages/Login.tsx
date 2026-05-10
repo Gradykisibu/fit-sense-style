@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { requireSupportedDeviceLocation } from '@/lib/locationAccess';
 import { Loader2 } from 'lucide-react';
 
 export default function Login() {
@@ -21,6 +22,7 @@ export default function Login() {
     setIsLoading(true);
 
     try {
+      await requireSupportedDeviceLocation();
       await login(email, password);
       toast({ title: 'Welcome back!', description: 'You have been logged in successfully.' });
       navigate('/');

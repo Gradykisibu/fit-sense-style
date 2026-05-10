@@ -98,35 +98,87 @@ export function getPlanBadgeColor(plan: SubscriptionPlan): string {
 
 export type UsageAction = 'analysis' | 'chat' | 'tryon' | 'shopping';
 
+export function normalizePlan(plan?: string | null): SubscriptionPlan {
+  return plan && plan in PLAN_LIMITS ? (plan as SubscriptionPlan) : 'free';
+}
+
+export function getUsageLabel(action: UsageAction): string {
+  const labels: Record<UsageAction, string> = {
+    analysis: 'Outfit analyses',
+    chat: 'AI chat messages',
+    tryon: 'Virtual try-ons',
+    shopping: 'Shopping reports',
+  };
+  return labels[action];
+}
+
+export function getUsageLimit(action: UsageAction, plan: SubscriptionPlan): number {
+  const limits = PLAN_LIMITS[plan];
+  return (
+    action === 'analysis' ? limits.monthlyAnalyses
+    : action === 'chat' ? limits.monthlyChats
+    : action === 'tryon' ? limits.monthlyTryons
+    : limits.monthlyShopping
+  );
+}
+
+export function getUsageStatus(
+  action: UsageAction,
+  used: number,
+  plan: SubscriptionPlan,
+): {
+  label: string;
+  used: number;
+  limit: number;
+  remaining: number;
+  percent: number;
+  isIncluded: boolean;
+  isFull: boolean;
+  isNearLimit: boolean;
+  message?: string;
+} {
+  const limit = getUsageLimit(action, plan);
+  const remaining = Math.max(limit - used, 0);
+  const percent = limit > 0 ? Math.min((used / limit) * 100, 100) : 100;
+  const label = getUsageLabel(action);
+  const isIncluded = limit > 0;
+  const isFull = isIncluded && used >= limit;
+  const isNearLimit = isIncluded && !isFull && remaining <= Math.max(3, Math.ceil(limit * 0.1));
+
+  return {
+    label,
+    used,
+    limit,
+    remaining,
+    percent,
+    isIncluded,
+    isFull,
+    isNearLimit,
+    message:
+      !isIncluded ? `${label} are not included on the ${plan} plan. Upgrade to use this feature.`
+      : isFull ? `You've used all ${limit} ${label.toLowerCase()} this month. Upgrade your plan to continue.`
+      : isNearLimit ? `Only ${remaining} ${label.toLowerCase()} remaining this month.`
+      : undefined,
+  };
+}
+
 export function canPerformAction(
   action: UsageAction,
   currentUsage: number,
   plan: SubscriptionPlan,
 ): { allowed: boolean; message?: string; remaining?: number } {
-  const limits = PLAN_LIMITS[plan];
-  const limit =
-    action === 'analysis' ? limits.monthlyAnalyses
-    : action === 'chat' ? limits.monthlyChats
-    : action === 'tryon' ? limits.monthlyTryons
-    : limits.monthlyShopping;
-
-  if (limit <= 0) {
-    return { allowed: false, message: `Your ${plan} plan does not include this feature. Upgrade to continue.` };
+  const status = getUsageStatus(action, currentUsage, normalizePlan(plan));
+  if (!status.isIncluded || status.isFull) {
+    return { allowed: false, message: status.message, remaining: status.remaining };
   }
-  if (currentUsage >= limit) {
-    return { allowed: false, message: `You've reached your ${action} limit for this month. Upgrade to continue.` };
-  }
-  const remaining = limit - currentUsage;
-  if (remaining <= 5) {
-    return { allowed: true, remaining, message: `Only ${remaining} ${action}s remaining this month.` };
-  }
-  return { allowed: true, remaining };
+  return { allowed: true, remaining: status.remaining, message: status.message };
 }
 
 /** Translate a structured edge function error envelope into a user-friendly message. */
 export function describeApiError(err: any): string {
   const e = err?.error ?? err;
   if (!e) return 'Something went wrong. Please try again.';
+  if (typeof e === 'string') return e;
   switch (e.code) {
     case 'unauthorized': return 'Please sign in again.';
     case 'rate_limited': return 'Too many requests. Please wait a moment and try again.';

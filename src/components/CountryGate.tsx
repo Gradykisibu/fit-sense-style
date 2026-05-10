@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { isSupportedCountry, SUPPORTED_COUNTRY_NAMES, SUPPORTED_COUNTRIES, SupportedCountry } from '@/lib/countries';
+import { LocationAccessResult, checkDeviceLocationAccess, supportedCountryListText } from '@/lib/locationAccess';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Globe } from 'lucide-react';
+import { Loader2, Globe, MapPinOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 /**
@@ -19,22 +20,71 @@ export default function CountryGate({ children }: { children: React.ReactNode })
   const [loading, setLoading] = useState(true);
   const [picked, setPicked] = useState<SupportedCountry | ''>('');
   const [saving, setSaving] = useState(false);
+  const [locationAccess, setLocationAccess] = useState<LocationAccessResult | null>(null);
 
   useEffect(() => {
     let cancel = false;
     if (!user) { setLoading(false); return; }
-    supabase.from('profiles').select('country').eq('id', user.id).single()
-      .then(({ data }) => { if (!cancel) { setCountry(data?.country ?? null); setLoading(false); } });
+
+    Promise.all([
+      supabase.from('profiles').select('country').eq('id', user.id).single(),
+      checkDeviceLocationAccess(),
+    ]).then(([profileResult, access]) => {
+      if (!cancel) {
+        setCountry(profileResult.data?.country ?? null);
+        setLocationAccess(access);
+        setLoading(false);
+      }
+    });
+
     return () => { cancel = true; };
   }, [user]);
 
-  if (!user || loading) return <>{children}</>;
+  if (!user || loading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/20">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex items-center justify-center gap-2 p-6 text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Verifying your location...
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+
+  if (locationAccess && !locationAccess.allowed) {
+    return (
+      <main className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/20">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto bg-destructive/10 p-3 rounded-full w-fit mb-2">
+              <MapPinOff className="w-6 h-6 text-destructive" />
+            </div>
+            <CardTitle>Location not supported</CardTitle>
+            <CardDescription>
+              {locationAccess.reason} Supported countries are {supportedCountryListText()}.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button className="w-full" onClick={() => checkDeviceLocationAccess(true).then(setLocationAccess)}>
+              Check Again
+            </Button>
+            <Button variant="outline" className="w-full" onClick={() => supabase.auth.signOut()}>
+              Sign Out
+            </Button>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+
   if (isSupportedCountry(country)) return <>{children}</>;
 
   const save = async () => {
     if (!picked) return;
     setSaving(true);
-    const { error } = await supabase.from('profiles').update({ country: picked }).eq('id', user.id);
+    const { error } = await supabase.rpc('update_profile_safe', { _country: picked });
     setSaving(false);
     if (error) { toast({ title: 'Could not save', description: error.message, variant: 'destructive' }); return; }
     setCountry(picked);

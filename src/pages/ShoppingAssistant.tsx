@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ShoppingBag, Loader2, Lock, TrendingUp, AlertCircle, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { hasFeatureAccess } from '@/lib/subscription';
+import { getFunctionErrorMessage } from '@/lib/api';
 
 interface WardrobeGap {
   category: string;
@@ -73,9 +74,10 @@ export default function ShoppingAssistant() {
       setReport(data.report);
       toast({ title: 'Shopping recommendations generated!' });
     } catch (error: any) {
+      const message = await getFunctionErrorMessage(error);
       toast({
         title: 'Failed to generate recommendations',
-        description: error.message,
+        description: message,
         variant: 'destructive'
       });
     } finally {
