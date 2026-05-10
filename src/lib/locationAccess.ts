@@ -25,7 +25,7 @@ const COUNTRY_BOUNDS: Bounds[] = [
   { code: 'FR', minLat: 41.0, maxLat: 52.0, minLon: -5.5, maxLon: 10.0 },
 ];
 
-function getCachedLocationResult(): LocationAccessResult | null {
+export function getCachedLocationAccess(): LocationAccessResult | null {
   try {
     const raw = sessionStorage.getItem(DEVICE_LOCATION_CACHE_KEY);
     if (!raw) return null;
@@ -76,7 +76,7 @@ export function supportedCountryListText() {
 
 export async function checkDeviceLocationAccess(force = false): Promise<LocationAccessResult> {
   if (!force) {
-    const cached = getCachedLocationResult();
+    const cached = getCachedLocationAccess();
     if (cached) return cached;
   }
 

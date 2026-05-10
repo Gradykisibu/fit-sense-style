@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { isSupportedCountry, SUPPORTED_COUNTRY_NAMES, SUPPORTED_COUNTRIES, SupportedCountry } from '@/lib/countries';
-import { LocationAccessResult, checkDeviceLocationAccess, supportedCountryListText } from '@/lib/locationAccess';
+import { LocationAccessResult, checkDeviceLocationAccess, getCachedLocationAccess, supportedCountryListText } from '@/lib/locationAccess';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -20,7 +20,7 @@ export default function CountryGate({ children }: { children: React.ReactNode })
   const [loading, setLoading] = useState(true);
   const [picked, setPicked] = useState<SupportedCountry | ''>('');
   const [saving, setSaving] = useState(false);
-  const [locationAccess, setLocationAccess] = useState<LocationAccessResult | null>(null);
+  const [locationAccess, setLocationAccess] = useState<LocationAccessResult | null>(() => getCachedLocationAccess());
 
   useEffect(() => {
     let cancel = false;
@@ -41,12 +41,13 @@ export default function CountryGate({ children }: { children: React.ReactNode })
   }, [user]);
 
   if (!user || loading) {
+    if (locationAccess?.allowed) return <>{children}</>;
+
     return (
       <main className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/20">
         <Card className="w-full max-w-md">
-          <CardContent className="flex items-center justify-center gap-2 p-6 text-muted-foreground">
+          <CardContent className="flex items-center justify-center p-6 text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Verifying your location...
           </CardContent>
         </Card>
       </main>
