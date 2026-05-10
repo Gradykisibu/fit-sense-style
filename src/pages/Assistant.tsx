@@ -8,7 +8,7 @@ import { Bot, User, Sparkles, Send, Image as ImageIcon, Plus, History, X, Trash2
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
-import { canPerformAction } from '@/lib/subscription';
+import { canPerformAction, describeApiError } from '@/lib/subscription';
 import {
   Dialog,
   DialogContent,
@@ -58,7 +58,7 @@ export default function Assistant() {
     if (!user) return;
     const { data } = await supabase
       .from('profiles')
-      .select('subscription_plan, monthly_chats_used')
+      .select('subscription_plan, monthly_chats_used, usage_reset_date')
       .eq('id', user.id)
       .single();
     if (data) {
@@ -321,7 +321,8 @@ export default function Assistant() {
           await saveMessage(conversationId, 'assistant', assistantMessage.content, assistantMessage.image_url);
           loadConversations();
         } else {
-          throw new Error('Failed to generate image');
+          const errorData = await imageResponse.json().catch(() => ({}));
+          throw new Error(describeApiError(errorData));
         }
         
         setLoading(false);
@@ -345,8 +346,8 @@ export default function Assistant() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to get response');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(describeApiError(errorData));
       }
 
       // Handle streaming response

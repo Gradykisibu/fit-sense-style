@@ -1,23 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { AppSettings, getSettings, saveSettings } from '@/lib/settings';
-import { testConnection } from '@/lib/api';
-import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { PLAN_LIMITS, getPlanBadgeColor } from '@/lib/subscription';
-import { Crown, TrendingUp, Sun, Moon, Monitor } from 'lucide-react';
+import { UsageAction, getPlanBadgeColor, getUsageStatus, normalizePlan } from '@/lib/subscription';
+import { Crown, TrendingUp, Sun, Moon, Monitor, AlertCircle } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 
+const USAGE_ROWS: Array<{ action: UsageAction; field: string }> = [
+  { action: 'analysis', field: 'monthly_analyses_used' },
+  { action: 'chat', field: 'monthly_chats_used' },
+  { action: 'tryon', field: 'monthly_tryons_used' },
+  { action: 'shopping', field: 'monthly_shopping_used' },
+];
+
 export default function Settings() {
-  const [form, setForm] = useState<AppSettings>(getSettings());
-  const { toast } = useToast();
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
   const [profile, setProfile] = useState<any>(null);
@@ -25,7 +24,7 @@ export default function Settings() {
   useEffect(() => {
     document.title = 'Settings – FitSense';
     fetchProfile();
-  }, []);
+  }, [user]);
 
   const fetchProfile = async () => {
     if (!user) return;
@@ -37,17 +36,11 @@ export default function Settings() {
     if (data) setProfile(data);
   };
 
-  const save = () => { saveSettings(form); toast({ title: 'Settings saved' }); };
-
-  const onTest = async () => {
-    const ok = await testConnection();
-    toast({ title: ok ? 'Connection OK' : 'Connection failed', description: ok ? 'Closet endpoint reachable.' : 'Check URL/API key or Mock Mode.' });
-  };
-
-  const plan = profile?.subscription_plan || 'free';
-  const limits = PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS];
-  const analysesUsed = profile?.monthly_analyses_used || 0;
-  const chatsUsed = profile?.monthly_chats_used || 0;
+  const plan = normalizePlan(profile?.subscription_plan);
+  const usageRows = USAGE_ROWS.map(({ action, field }) =>
+    getUsageStatus(action, Number(profile?.[field] || 0), plan),
+  );
+  const hasFullUsage = usageRows.some((row) => row.isFull);
 
   return (
     <main className="container mx-auto px-6 py-8 space-y-6">
@@ -77,29 +70,29 @@ export default function Settings() {
           </div>
 
           <div className="space-y-4 pt-4 border-t">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Outfit Analyses</span>
-                <span className="font-medium">
-                  {analysesUsed} / {limits.monthlyAnalyses === Infinity ? '∞' : limits.monthlyAnalyses}
-                </span>
+            {hasFullUsage && (
+              <div className="flex gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                <span>One or more monthly limits has been reached. Upgrade your plan to continue using those features.</span>
               </div>
-              <Progress 
-                value={limits.monthlyAnalyses === Infinity ? 0 : (analysesUsed / limits.monthlyAnalyses) * 100} 
-              />
-            </div>
+            )}
 
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>AI Chat Messages</span>
-                <span className="font-medium">
-                  {chatsUsed} / {limits.monthlyChats === Infinity ? '∞' : limits.monthlyChats}
-                </span>
+            {usageRows.map((row) => (
+              <div key={row.label} className="space-y-2">
+                <div className="flex justify-between gap-3 text-sm">
+                  <span>{row.label}</span>
+                  <span className="font-medium">
+                    {row.isIncluded ? `${row.used} / ${row.limit}` : 'Not included'}
+                  </span>
+                </div>
+                <Progress value={row.percent} />
+                {row.message && (
+                  <p className={row.isFull || !row.isIncluded ? 'text-xs text-destructive' : 'text-xs text-muted-foreground'}>
+                    {row.message}
+                  </p>
+                )}
               </div>
-              <Progress 
-                value={limits.monthlyChats === Infinity ? 0 : (chatsUsed / limits.monthlyChats) * 100} 
-              />
-            </div>
+            ))}
 
             <div className="text-sm text-muted-foreground">
               Usage resets on {profile?.usage_reset_date ? new Date(profile.usage_reset_date).toLocaleDateString() : 'N/A'}
@@ -131,36 +124,6 @@ export default function Settings() {
         </CardContent>
       </Card>
 
-      {/* API Configuration Card */}
-      {
-        profile?.email === "Kisibugrady3980@gmail.com" ? null : (
-          <Card>
-            <CardHeader><CardTitle>API Configuration</CardTitle></CardHeader>
-            <CardContent className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="base">API Base URL</Label>
-                <Input id="base" placeholder="https://api.example.com" value={form.apiBaseUrl} onChange={(e) => setForm((f) => ({ ...f, apiBaseUrl: e.target.value }))} />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="key">API Key</Label>
-                <Input id="key" placeholder="paste key" value={form.apiKey} onChange={(e) => setForm((f) => ({ ...f, apiKey: e.target.value }))} />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">Mock Mode</div>
-                  <div className="text-sm text-muted-foreground">Return example payloads with latency</div>
-                </div>
-                <Switch checked={form.mockMode} onCheckedChange={(v) => setForm((f) => ({ ...f, mockMode: v }))} />
-              </div>
-              <div className="flex gap-2">
-                <Button onClick={save}>Save</Button>
-                <Button variant="secondary" onClick={onTest}>Test Connection</Button>
-              </div>
-            </CardContent>
-          </Card>
-
-        )
-      }
     </main>
   );
 }

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { requireSupportedDeviceLocation } from '@/lib/locationAccess';
 import { Loader2 } from 'lucide-react';
 import countries from '@/data/countries.json';
 
@@ -48,8 +49,9 @@ export default function Register() {
     setIsLoading(true);
 
     try {
+      const deviceCountry = await requireSupportedDeviceLocation();
       const fullPhone = phone ? `${phoneCode} ${phone}` : undefined;
-      await register(email, password, name, country, fullPhone, gender);
+      await register(email, password, name, country || deviceCountry, fullPhone, gender);
       toast({ title: 'Account created!', description: 'Welcome to FitSense!' });
       navigate('/');
     } catch (error) {

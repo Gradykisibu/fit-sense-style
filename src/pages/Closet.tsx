@@ -2,15 +2,27 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ClosetItemCard } from '@/components/ClosetItemCard';
-import { addClosetItem, deleteClosetItem, getCloset } from '@/lib/api';
+import { addClosetItem, clearCloset, deleteClosetItem, getCloset } from '@/lib/api';
 import { ClothingItem } from '@/lib/settings';
 import { useSignedClosetUrl } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Trash2 } from 'lucide-react';
 
 const CATEGORIES: ClothingItem['category'][] = ['hat','t-shirt','shirt','hoodie','jacket','dress','skirt','pants','shorts','socks','shoes','belt','bag','accessory'];
 
@@ -20,6 +32,7 @@ export default function Closet() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<{imageUrl?: string; category?: ClothingItem['category']; colorHex?: string; brand?: string}>({});
   const [uploading, setUploading] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const { toast } = useToast();
   const previewUrl = useSignedClosetUrl(form.imageUrl);
 
@@ -91,14 +104,56 @@ export default function Closet() {
     try { await deleteClosetItem(id); toast({ title: 'Deleted' }); load(); } catch (e: any) { toast({ title: 'Failed to delete', description: e?.message }); }
   };
 
+  const onClearCloset = async () => {
+    setClearing(true);
+    try {
+      const { deletedCount } = await clearCloset();
+      setItems([]);
+      toast({
+        title: 'Closet cleared',
+        description: `Deleted ${deletedCount} closet item${deletedCount === 1 ? '' : 's'}.`,
+      });
+    } catch (e: any) {
+      toast({
+        title: 'Failed to clear closet',
+        description: e?.message || 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setClearing(false);
+    }
+  };
+
   return (
     <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h1 className="text-xl sm:text-2xl font-bold">My Closet</h1>
-        <div className="flex gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" disabled={loading || items.length === 0 || clearing} className="w-full sm:w-auto">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Clear Closet
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Clear your closet?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete all {items.length} closet item{items.length === 1 ? '' : 's'} and their uploaded images. This cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={clearing}>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={onClearCloset} disabled={clearing}>
+                  {clearing ? 'Clearing...' : 'Clear Closet'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button>Add Item</Button>
+              <Button className="w-full sm:w-auto">Add Item</Button>
             </DialogTrigger>
           <DialogContent>
             <DialogHeader>

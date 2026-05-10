@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Sparkles, Loader2, Lock, ImageIcon, CheckCircle2, Trash2, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { hasFeatureAccess } from '@/lib/subscription';
+import { getFunctionErrorMessage } from '@/lib/api';
 
 interface ClosetItem {
   id: string;
@@ -166,9 +167,10 @@ export default function VirtualTryOn() {
       setSelectedItems([]);
       fetchJobs();
     } catch (error: any) {
+      const message = await getFunctionErrorMessage(error);
       toast({
         title: 'Failed to generate try-on',
-        description: error.message,
+        description: message,
         variant: 'destructive'
       });
     } finally {
