@@ -34,10 +34,15 @@ const tabs: TabItem[] = [
   { to: "/shopping", label: "Shopping", icon: ShoppingBag, premiumFeature: "shopping-assistant" },
   { to: "/analytics", label: "Analytics", icon: BarChart3, premiumFeature: "custom-analytics" },
   { to: "/snapshots", label: "Snapshots", icon: Save },
+];
+
+const accountTabs: TabItem[] = [
   { to: "/pricing", label: "Pricing", icon: CreditCard },
   { to: "/support", label: "Support", icon: LifeBuoy },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ];
+
+const mobileTabs: TabItem[] = [...tabs, ...accountTabs];
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
