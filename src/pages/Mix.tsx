@@ -1,11 +1,19 @@
 import React, { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { UploadCard } from '@/components/UploadCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { analyzeItems } from '@/lib/api';
+import { analyzeItems, getCloset } from '@/lib/api';
 import { ScoreBadge } from '@/components/ScoreBadge';
 import { Stepper } from '@/components/Stepper';
+import { ClosetItemCard } from '@/components/ClosetItemCard';
 import { useToast } from '@/hooks/use-toast';
+import {
+  parseSuggestion,
+  matchRequestsToCloset,
+  type ClosetMatchResult,
+  type RequestedClosetItem,
+} from '@/lib/closetMatching';
 
 const slots = [
   { key: 'hat', label: 'Hat (optional)', required: false },
