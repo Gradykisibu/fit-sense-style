@@ -1,18 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ImageIcon } from 'lucide-react';
 import { ClothingItem } from '@/lib/settings';
 import { useSignedClosetUrl } from '@/lib/storage';
 
+// Closet images are stored ONCE in the private "closet-items" bucket.
+// We render them via short-lived signed URLs (cached in storage.ts) — we never
+// regenerate or re-upload images just to display existing closet items.
 export function ClosetItemCard({ item, onDelete }: { item: ClothingItem; onDelete?: (id: string) => void }) {
   const signed = useSignedClosetUrl(item.imageUrl);
+  const [failed, setFailed] = useState(false);
+  const showImage = signed && !failed;
   return (
     <Card className="overflow-hidden group">
-      <div className="aspect-[4/3] bg-muted">
-        {signed ? (
-          <img src={signed} alt={`${item.category} ${item.brand || ''}`} className="w-full h-full object-cover" loading="lazy" />
+      <div className="aspect-[4/3] bg-muted flex items-center justify-center">
+        {showImage ? (
+          <img
+            src={signed}
+            alt={`${item.category} ${item.brand || ''}`}
+            className="w-full h-full object-cover"
+            loading="lazy"
+            onError={() => setFailed(true)}
+          />
         ) : (
-          <div className="w-full h-full" />
+          <ImageIcon className="h-8 w-8 text-muted-foreground/50" aria-hidden />
         )}
       </div>
       <CardHeader className="p-3">
