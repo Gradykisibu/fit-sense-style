@@ -1,11 +1,19 @@
 import React, { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { UploadCard } from '@/components/UploadCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { analyzeItems } from '@/lib/api';
+import { analyzeItems, getCloset } from '@/lib/api';
 import { ScoreBadge } from '@/components/ScoreBadge';
 import { Stepper } from '@/components/Stepper';
+import { ClosetItemCard } from '@/components/ClosetItemCard';
 import { useToast } from '@/hooks/use-toast';
+import {
+  parseSuggestion,
+  matchRequestsToCloset,
+  type ClosetMatchResult,
+  type RequestedClosetItem,
+} from '@/lib/closetMatching';
 
 const slots = [
   { key: 'hat', label: 'Hat (optional)', required: false },
@@ -22,6 +30,8 @@ export default function Mix() {
   const [files, setFiles] = useState<Record<SlotKey, { file: File; url: string } | undefined>>({} as any);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any | null>(null);
+  const [aiPicking, setAiPicking] = useState(false);
+  const [aiPick, setAiPick] = useState<ClosetMatchResult | null>(null);
   const { toast } = useToast();
 
   const canAnalyze = useMemo(() => ['top', 'bottom', 'shoes'].every((k) => !!files[k as SlotKey]), [files]);
@@ -42,6 +52,48 @@ export default function Mix() {
       toast({ title: 'Analysis failed', description: e?.message || 'Please try again.' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const onAiPickFromCloset = async () => {
+    if (!result?.suggestedSwaps?.length) return;
+    setAiPicking(true);
+    setAiPick(null);
+    try {
+      const requests: RequestedClosetItem[] = result.suggestedSwaps
+        .map((s: any) => parseSuggestion(typeof s === 'string' ? s : s.suggestion || ''))
+        .filter(Boolean) as RequestedClosetItem[];
+
+      if (!requests.length) {
+        toast({ title: 'Nothing to match', description: "Couldn't read clothing items from the suggestions." });
+        return;
+      }
+
+      const closet = await getCloset();
+      if (!closet.length) {
+        toast({
+          title: 'Your closet is empty',
+          description: 'Add items first so AI can build outfits from your wardrobe.',
+        });
+        setAiPick({ matched: [], missing: requests });
+        return;
+      }
+
+      const match = matchRequestsToCloset(requests, closet);
+      setAiPick(match);
+
+      if (match.missing.length === 0) {
+        toast({ title: 'Outfit ready', description: `Picked ${match.matched.length} item(s) from your closet.` });
+      } else {
+        toast({
+          title: 'Some items missing',
+          description: `Missing: ${match.missing.map((m) => m.name).join(', ')}`,
+        });
+      }
+    } catch (e: any) {
+      toast({ title: 'Could not pick from closet', description: e?.message || 'Please try again.' });
+    } finally {
+      setAiPicking(false);
     }
   };
 
@@ -88,8 +140,15 @@ export default function Mix() {
           </Card>
           {result.suggestedSwaps && result.suggestedSwaps.length > 0 && (
             <Card>
-              <CardHeader><CardTitle>Suggested Swaps</CardTitle></CardHeader>
-              <CardContent>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between gap-2">
+                  <span>Suggested Swaps</span>
+                  <Button size="sm" onClick={onAiPickFromCloset} disabled={aiPicking}>
+                    {aiPicking ? 'Checking closet…' : 'Let AI pick from my closet'}
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <ul className="space-y-2">
                   {result.suggestedSwaps.map((swap: any, idx: number) => (
                     <li key={idx} className="text-sm">
@@ -97,6 +156,42 @@ export default function Mix() {
                     </li>
                   ))}
                 </ul>
+
+                {aiPick && aiPick.matched.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold">AI-picked from your closet</h3>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {aiPick.matched.map((m) => (
+                        <div key={m.closetItem.id} className="space-y-1">
+                          <ClosetItemCard item={m.closetItem} />
+                          <p className="text-xs text-muted-foreground px-1">{m.matchReason}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {aiPick && aiPick.missing.length > 0 && (
+                  <div className="space-y-2 rounded-md border border-dashed p-4">
+                    <h3 className="text-sm font-semibold">Items to add to your closet</h3>
+                    <p className="text-sm text-muted-foreground">
+                      I couldn't complete this outfit because your closet is missing:{' '}
+                      {aiPick.missing.map((m) => m.name).join(', ')}.
+                    </p>
+                    <ul className="text-sm space-y-1 list-disc pl-5">
+                      {aiPick.missing.map((m, i) => (
+                        <li key={i}>
+                          <span className="font-medium capitalize">{m.name}</span>
+                          <span className="text-muted-foreground"> — {m.category}{m.color ? `, ${m.color}` : ''}</span>
+                          {m.reason && <div className="text-xs text-muted-foreground">Why: {m.reason}</div>}
+                        </li>
+                      ))}
+                    </ul>
+                    <Button asChild size="sm" variant="secondary">
+                      <Link to="/closet">Add missing items to closet</Link>
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
