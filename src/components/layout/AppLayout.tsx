@@ -170,6 +170,15 @@ export default function AppLayout() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  {accountTabs.map(({ to, label, icon: Icon }) => (
+                    <DropdownMenuItem key={to} asChild className="cursor-pointer">
+                      <Link to={to}>
+                        <Icon className="mr-2 h-4 w-4" />
+                        <span>{label}</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="cursor-pointer text-destructive">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
