@@ -134,9 +134,9 @@ export default function Check() {
               {result.suggestedSwaps && result.suggestedSwaps.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center justify-between gap-2">
+                    <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                       <span>Suggested Swaps</span>
-                      <Button size="sm" onClick={onGenerateEdit} disabled={editing}>
+                      <Button size="sm" onClick={onGenerateEdit} disabled={editing} className="w-full sm:w-auto min-h-11">
                         {editing ? 'Generating…' : 'See it on me'}
                       </Button>
                     </CardTitle>
