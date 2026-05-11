@@ -420,18 +420,18 @@ export default function Assistant() {
   const isPro = userPlan === 'pro';
 
   return (
-    <main className="container mx-auto px-6 py-8 max-w-5xl">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary/10 p-2 rounded-full">
-            <Sparkles className="h-6 w-6 text-primary" />
+    <main className="container mx-auto px-3 sm:px-6 py-4 sm:py-8 max-w-5xl">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="bg-primary/10 p-2 rounded-full shrink-0">
+            <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              AI Style Assistant
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2 flex-wrap">
+              <span className="truncate">AI Style Assistant</span>
               {isPro && <Badge className="bg-gradient-to-r from-purple-500 to-pink-500">Pro</Badge>}
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">
               {isPro ? 'Unlimited personalized style advice' : 'Get personalized style advice'}
             </p>
           </div>
@@ -439,12 +439,12 @@ export default function Assistant() {
         <div className="flex gap-2">
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <History className="h-4 w-4" />
-                History
+              <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+                <History className="h-4 w-4 sm:mr-1" />
+                <span className="hidden sm:inline">History</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>Conversation History</DialogTitle>
               </DialogHeader>
@@ -456,11 +456,11 @@ export default function Assistant() {
                   >
                     <Button
                       variant={conv.id === currentConversationId ? 'secondary' : 'ghost'}
-                      className="flex-1 justify-start"
+                      className="flex-1 justify-start min-w-0"
                       onClick={() => loadConversation(conv.id)}
                     >
-                      <div className="flex flex-col items-start">
-                        <span className="font-medium">{conv.title}</span>
+                      <div className="flex flex-col items-start min-w-0">
+                        <span className="font-medium truncate max-w-full">{conv.title}</span>
                         <span className="text-xs text-muted-foreground">
                           {new Date(conv.updated_at).toLocaleDateString()}
                         </span>
@@ -469,7 +469,7 @@ export default function Assistant() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0"
                       onClick={(e) => deleteConversation(conv.id, e)}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
@@ -479,15 +479,15 @@ export default function Assistant() {
               </div>
             </DialogContent>
           </Dialog>
-          <Button onClick={createNewConversation} size="sm">
-            <Plus className="h-4 w-4" />
-            New Chat
+          <Button onClick={createNewConversation} size="sm" className="flex-1 sm:flex-none">
+            <Plus className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">New Chat</span>
           </Button>
         </div>
       </div>
 
-      <Card className="mb-6 h-[calc(100vh-300px)]">
-        <CardContent className="p-4 h-full overflow-y-auto">
+      <Card className="mb-4 sm:mb-6 h-[calc(100vh-280px)] sm:h-[calc(100vh-300px)] min-h-[320px]">
+        <CardContent className="p-3 sm:p-4 h-full overflow-y-auto">
           {messages.length === 0 ? (
             <div className="h-full flex items-center justify-center text-center">
               <div className="space-y-4 max-w-md">
