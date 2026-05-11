@@ -564,7 +564,7 @@ export default function Assistant() {
             </Button>
           </div>
         )}
-        <div className="flex gap-3">
+        <div className="flex items-end gap-2 pb-[env(safe-area-inset-bottom)]">
           <input
             ref={fileInputRef}
             type="file"
@@ -577,14 +577,16 @@ export default function Assistant() {
             size="icon"
             onClick={() => fileInputRef.current?.click()}
             disabled={loading || uploadingImage}
+            aria-label="Attach image"
+            className="shrink-0 h-11 w-11"
           >
             <ImageIcon className="h-4 w-4" />
           </Button>
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Describe your occasion or ask for style advice... (e.g., 'I have a wedding this weekend' or 'What should I wear for a job interview?')"
-            className="flex-1 resize-none"
+            placeholder="Describe your occasion or ask for style advice..."
+            className="flex-1 resize-none min-h-11 text-base sm:text-sm"
             rows={2}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
@@ -598,7 +600,8 @@ export default function Assistant() {
             onClick={handleSendMessage}
             disabled={loading || (!input.trim() && !selectedImage)}
             size="icon"
-            className="self-end"
+            aria-label="Send message"
+            className="shrink-0 h-11 w-11"
           >
             <Send className="h-4 w-4" />
           </Button>
