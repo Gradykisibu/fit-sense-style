@@ -64,7 +64,7 @@ export default function CountryGate({ children }: { children: React.ReactNode })
             </div>
             <CardTitle>Location not supported</CardTitle>
             <CardDescription>
-              {locationAccess.reason} Supported countries are {supportedCountryListText()}.
+              {(locationAccess as any).reason} Supported countries are {supportedCountryListText()}.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -85,7 +85,7 @@ export default function CountryGate({ children }: { children: React.ReactNode })
   const save = async () => {
     if (!picked) return;
     setSaving(true);
-    const { error } = await supabase.rpc('update_profile_safe', { _country: picked });
+    const { error } = await (supabase.rpc as any)('update_profile_safe', { _country: picked });
     setSaving(false);
     if (error) { toast({ title: 'Could not save', description: error.message, variant: 'destructive' }); return; }
     setCountry(picked);

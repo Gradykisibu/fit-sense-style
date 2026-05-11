@@ -111,6 +111,6 @@ export async function checkDeviceLocationAccess(force = false): Promise<Location
 
 export async function requireSupportedDeviceLocation(): Promise<SupportedCountry> {
   const result = await checkDeviceLocationAccess(true);
-  if (!result.allowed) throw new Error(result.reason);
+  if (!result.allowed) throw new Error((result as any).reason);
   return result.country;
 }

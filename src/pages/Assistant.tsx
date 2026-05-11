@@ -420,18 +420,18 @@ export default function Assistant() {
   const isPro = userPlan === 'pro';
 
   return (
-    <main className="container mx-auto px-6 py-8 max-w-5xl">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary/10 p-2 rounded-full">
-            <Sparkles className="h-6 w-6 text-primary" />
+    <main className="container mx-auto px-3 sm:px-6 py-4 sm:py-8 max-w-5xl">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="bg-primary/10 p-2 rounded-full shrink-0">
+            <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              AI Style Assistant
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2 flex-wrap">
+              <span className="truncate">AI Style Assistant</span>
               {isPro && <Badge className="bg-gradient-to-r from-purple-500 to-pink-500">Pro</Badge>}
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">
               {isPro ? 'Unlimited personalized style advice' : 'Get personalized style advice'}
             </p>
           </div>
@@ -439,12 +439,12 @@ export default function Assistant() {
         <div className="flex gap-2">
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <History className="h-4 w-4" />
-                History
+              <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+                <History className="h-4 w-4 sm:mr-1" />
+                <span className="hidden sm:inline">History</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>Conversation History</DialogTitle>
               </DialogHeader>
@@ -456,11 +456,11 @@ export default function Assistant() {
                   >
                     <Button
                       variant={conv.id === currentConversationId ? 'secondary' : 'ghost'}
-                      className="flex-1 justify-start"
+                      className="flex-1 justify-start min-w-0"
                       onClick={() => loadConversation(conv.id)}
                     >
-                      <div className="flex flex-col items-start">
-                        <span className="font-medium">{conv.title}</span>
+                      <div className="flex flex-col items-start min-w-0">
+                        <span className="font-medium truncate max-w-full">{conv.title}</span>
                         <span className="text-xs text-muted-foreground">
                           {new Date(conv.updated_at).toLocaleDateString()}
                         </span>
@@ -469,7 +469,7 @@ export default function Assistant() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0"
                       onClick={(e) => deleteConversation(conv.id, e)}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
@@ -479,15 +479,15 @@ export default function Assistant() {
               </div>
             </DialogContent>
           </Dialog>
-          <Button onClick={createNewConversation} size="sm">
-            <Plus className="h-4 w-4" />
-            New Chat
+          <Button onClick={createNewConversation} size="sm" className="flex-1 sm:flex-none">
+            <Plus className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">New Chat</span>
           </Button>
         </div>
       </div>
 
-      <Card className="mb-6 h-[calc(100vh-300px)]">
-        <CardContent className="p-4 h-full overflow-y-auto">
+      <Card className="mb-4 sm:mb-6 h-[calc(100vh-280px)] sm:h-[calc(100vh-300px)] min-h-[320px]">
+        <CardContent className="p-3 sm:p-4 h-full overflow-y-auto">
           {messages.length === 0 ? (
             <div className="h-full flex items-center justify-center text-center">
               <div className="space-y-4 max-w-md">
@@ -507,20 +507,20 @@ export default function Assistant() {
                   key={message.id}
                   className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`flex gap-3 max-w-[80%] ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                  <div className={`flex gap-2 sm:gap-3 max-w-[88%] sm:max-w-[80%] min-w-0 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
                     <div
-                      className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                      className={`flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${
                         message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary'
                       }`}
                     >
                       {message.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 min-w-0 flex-1">
                       {message.image_url && (
                         <img
                           src={message.image_url}
                           alt="Uploaded"
-                          className="rounded-lg max-w-sm border"
+                          className="rounded-lg max-w-full sm:max-w-sm border"
                         />
                       )}
                       <div
@@ -528,7 +528,7 @@ export default function Assistant() {
                           message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary'
                         }`}
                       >
-                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                        <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                       </div>
                     </div>
                   </div>
@@ -564,7 +564,7 @@ export default function Assistant() {
             </Button>
           </div>
         )}
-        <div className="flex gap-3">
+        <div className="flex items-end gap-2 pb-[env(safe-area-inset-bottom)]">
           <input
             ref={fileInputRef}
             type="file"
@@ -577,14 +577,16 @@ export default function Assistant() {
             size="icon"
             onClick={() => fileInputRef.current?.click()}
             disabled={loading || uploadingImage}
+            aria-label="Attach image"
+            className="shrink-0 h-11 w-11"
           >
             <ImageIcon className="h-4 w-4" />
           </Button>
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Describe your occasion or ask for style advice... (e.g., 'I have a wedding this weekend' or 'What should I wear for a job interview?')"
-            className="flex-1 resize-none"
+            placeholder="Describe your occasion or ask for style advice..."
+            className="flex-1 resize-none min-h-11 text-base sm:text-sm"
             rows={2}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
@@ -598,7 +600,8 @@ export default function Assistant() {
             onClick={handleSendMessage}
             disabled={loading || (!input.trim() && !selectedImage)}
             size="icon"
-            className="self-end"
+            aria-label="Send message"
+            className="shrink-0 h-11 w-11"
           >
             <Send className="h-4 w-4" />
           </Button>
