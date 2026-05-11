@@ -121,11 +121,11 @@ export default function Check() {
               <Card>
                 <CardHeader><CardTitle>Color Palette</CardTitle></CardHeader>
                 <CardContent>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-3 max-w-full">
                     {result.colorHarmony?.palette?.map((hex: string) => (
-                      <div key={hex} className="flex items-center gap-2">
-                        <span className="h-6 w-6 rounded-md border" style={{ backgroundColor: hex }} title={hex} />
-                        <span className="text-sm text-muted-foreground">{hex}</span>
+                      <div key={hex} className="flex items-center gap-2 min-w-0">
+                        <span className="h-8 w-8 shrink-0 rounded-md border" style={{ backgroundColor: hex }} title={hex} />
+                        <span className="text-sm text-muted-foreground break-all">{hex}</span>
                       </div>
                     ))}
                   </div>
