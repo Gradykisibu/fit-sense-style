@@ -64,7 +64,7 @@ export default function CountryGate({ children }: { children: React.ReactNode })
             </div>
             <CardTitle>Location not supported</CardTitle>
             <CardDescription>
-              {locationAccess.reason} Supported countries are {supportedCountryListText()}.
+              {(locationAccess as any).reason} Supported countries are {supportedCountryListText()}.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
