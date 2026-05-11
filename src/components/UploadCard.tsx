@@ -24,7 +24,7 @@ export const UploadCard: React.FC<UploadCardProps> = ({ label, accept = 'image/*
   const handleFile = (file?: File) => {
     if (!file) return;
     const v = validateImageFile(file);
-    if (!v.ok) {
+    if (v.ok !== true) {
       toast({ title: 'Invalid image', description: v.reason, variant: 'destructive' });
       return;
     }
