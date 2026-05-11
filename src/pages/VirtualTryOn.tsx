@@ -274,7 +274,7 @@ export default function VirtualTryOn() {
                   No items in your closet yet. Add some items first!
                 </p>
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
                   {closetItems.map((item) => (
                     <div
                       key={item.id}
