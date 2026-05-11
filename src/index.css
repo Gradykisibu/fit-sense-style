@@ -97,7 +97,7 @@ All colors MUST be HSL. */
 
 @layer base {
   * { @apply border-border; }
-  body { @apply bg-background text-foreground; }
+  html, body { @apply bg-background text-foreground; overflow-x: hidden; max-width: 100vw; }
 
   /* Utility classes bound to tokens */
   .bg-hero-gradient { background-image: var(--gradient-hero); }

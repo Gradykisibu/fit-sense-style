@@ -197,18 +197,18 @@ export default function VirtualTryOn() {
   }
 
   return (
-    <main className="container mx-auto px-6 py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Sparkles className="w-8 h-8" />
-            Virtual Try-On Studio
+    <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 max-w-full overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 break-words">
+            <Sparkles className="w-7 h-7 sm:w-8 sm:h-8 shrink-0" />
+            <span className="min-w-0">Virtual Try-On Studio</span>
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-muted-foreground mt-2 text-sm sm:text-base">
             Select items from your closet to visualize outfit combinations
           </p>
         </div>
-        <Button onClick={generateTryOn} disabled={generating || selectedItems.length < 2}>
+        <Button onClick={generateTryOn} disabled={generating || selectedItems.length < 2} className="w-full sm:w-auto min-h-11">
           {generating ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -274,7 +274,7 @@ export default function VirtualTryOn() {
                   No items in your closet yet. Add some items first!
                 </p>
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
                   {closetItems.map((item) => (
                     <div
                       key={item.id}
@@ -321,8 +321,9 @@ export default function VirtualTryOn() {
                       <Button
                         variant="destructive"
                         size="icon"
-                        className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-2 right-2 z-10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                         onClick={() => deleteJob(job.id)}
+                        aria-label="Delete try-on"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
