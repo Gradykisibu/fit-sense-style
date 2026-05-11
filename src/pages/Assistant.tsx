@@ -507,20 +507,20 @@ export default function Assistant() {
                   key={message.id}
                   className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`flex gap-3 max-w-[80%] ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                  <div className={`flex gap-2 sm:gap-3 max-w-[88%] sm:max-w-[80%] min-w-0 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
                     <div
-                      className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                      className={`flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${
                         message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary'
                       }`}
                     >
                       {message.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 min-w-0 flex-1">
                       {message.image_url && (
                         <img
                           src={message.image_url}
                           alt="Uploaded"
-                          className="rounded-lg max-w-sm border"
+                          className="rounded-lg max-w-full sm:max-w-sm border"
                         />
                       )}
                       <div
@@ -528,7 +528,7 @@ export default function Assistant() {
                           message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary'
                         }`}
                       >
-                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                        <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                       </div>
                     </div>
                   </div>
