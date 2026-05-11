@@ -63,7 +63,7 @@ export default function AppLayout() {
   }, [user]);
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col overflow-x-hidden">
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur border-b">
         <div className="container mx-auto px-4">
           <div className="flex h-14 items-center justify-between">
