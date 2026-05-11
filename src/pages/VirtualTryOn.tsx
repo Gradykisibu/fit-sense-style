@@ -197,18 +197,18 @@ export default function VirtualTryOn() {
   }
 
   return (
-    <main className="container mx-auto px-6 py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Sparkles className="w-8 h-8" />
-            Virtual Try-On Studio
+    <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 max-w-full overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 break-words">
+            <Sparkles className="w-7 h-7 sm:w-8 sm:h-8 shrink-0" />
+            <span className="min-w-0">Virtual Try-On Studio</span>
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-muted-foreground mt-2 text-sm sm:text-base">
             Select items from your closet to visualize outfit combinations
           </p>
         </div>
-        <Button onClick={generateTryOn} disabled={generating || selectedItems.length < 2}>
+        <Button onClick={generateTryOn} disabled={generating || selectedItems.length < 2} className="w-full sm:w-auto min-h-11">
           {generating ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
