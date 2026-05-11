@@ -189,7 +189,7 @@ export default function AppLayout() {
           </div>
         </div>
       </header>
-      <div className="bg-hero-gradient">
+      <div className="bg-hero-gradient w-full max-w-full overflow-x-hidden">
         <Outlet />
       </div>
       <footer className="mt-auto border-t">
